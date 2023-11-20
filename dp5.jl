@@ -1,7 +1,4 @@
-# returns (explicitly)
-# IDID for error value, 
-# computed x (should be the x_end value if successful)
-# 
+include("dp5_types.jl")
 
 function dopri5(
     n,
@@ -140,12 +137,11 @@ function dopri5(
 
     ###### When a fail has occurred, return with idid = -1
     if arret
-        # (idid, x)
-        return (-1, x)
+        return DP5Report(x, -1, 0, 0, 0, 0)
     end
 
     # indices to work start at the starting locations but for a view we need 
-    x, idid = dopcor(
+    dp5_report = dopcor(
         n, fcn, x, y, xend, hmax, h, rtol, atol, itol, nmax, uround, nstiff,
         safe, beta, fac1, fac2, 
         view(work, iey1:iey1+n-1), 
@@ -159,11 +155,11 @@ function dopri5(
         nrdens
     )
     
-    
+    return dp5_report
 
 end
 
-# return idid, x
+# return idid, x, StepsEvalReport
 function dopcor(
     n,
     fcn, 
@@ -261,13 +257,13 @@ function dopcor(
         if nstep > nmax
             # GOTO 78
             println(" MORE THAN NMAX = ", nmax, " STEPS ARE NEEDED")
-            return (-2, x)
+            return DP5Report(x, -2, 0, 0, 0, 0)
         end
         
         if (0.10 * abs(h)) <= abs(x)*uround 
             # GOTO 77
             println("STEP SIZE TOO SMALL, H = ", h)
-            return (-3, x)
+            return DP5Report(x, -3, 0, 0, 0, 0)
         end
 
         if ((x+1.01*h-xend)*posneg) > 0.0
@@ -380,11 +376,18 @@ function dopcor(
             ###### Normal Exit
             if last 
                 h = hnew
-                iwork[17] = nfcn 
-                iwork[18] = nstep
-                iwork[19] = naccpt
-                iwork[20] = nrejct
-                return (1, x)
+                return DP5Report(
+                    x, 
+                    1, 
+                    nfcn, 
+                    nstep, 
+                    naccpt, 
+                    nrejct
+                )
+                #iwork[17] = nfcn 
+                #iwork[18] = nstep
+                #iwork[19] = naccpt
+                #iwork[20] = nrejct
             end
 
             if(abs(hnew) > hmax)
