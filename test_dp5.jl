@@ -1,4 +1,4 @@
-include("cleaner_dp5.jl")
+include("dp5.jl")
 
 # FCN must follow format FCN(N, X, Y, F, RPAR, IPAR)
 
