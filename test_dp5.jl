@@ -7,18 +7,17 @@ function fcn(n, x, y, f)
 end
 
 y = [1.0]
-work = zeros(29)
-iwork = zeros(21)
+work = zeros(8)
 
 dopri5(
     1,
     fcn,
     0.0,
     y,
-    2.0,
+    1.0,
     1e-10,
     1e-10,
     0,
-    work,# work, should be 8*N + 5*NRDENS+21 = 8*2 + 5*0 + 21
-    iwork, #length should be NRDENS + 21
+    DP5Options(),
+    work,# work, should be 8*N
 )

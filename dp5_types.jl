@@ -20,8 +20,19 @@ struct DP5Options
 
     # originally in iwork[1] - iwork[4]
     maximum_allowed_steps
-    # choice_coefficients - not being used anymore
-    # print error messages - could be boolean
+    print_error_messages
     stiffness_test_activation_step
-    # number dense components - will never be used
 end
+
+DP5Options() = DP5Options(
+    2.3e-16, #uround
+    0.9,     # safety_factor
+    0.2,     # step_size_selection_one
+    10.0,    # step_size_selection_two
+    0.04,    # beta
+    0.0,     # maximal step size - default to 0.0, later set to xend - x
+    0.0,     # initial step size - default to 0.0, trigger hinit later
+    100000,  # maximum number of allowed steps 
+    true,    # whether or not error messages should be printed
+    1000 # stiffness test activated after step J * this number
+)

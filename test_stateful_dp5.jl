@@ -28,8 +28,8 @@ for t in times
         1e-10,
         1e-10,
         0,
-        zeros(29),# work, should be 8*N + 5*NRDENS+21 = 8*2 + 5*0 + 21
-        zeros(21), #length should be NRDENS + 21
+        DP5Options(),
+        zeros(8),# work, should be 8*N + 5*NRDENS+21 = 8*2 + 5*0 + 21
     )
 
     push!(values, y[1])

@@ -9,109 +9,76 @@ function dopri5(
     rtol,
     atol, 
     itol,
+    options,
     work,  
-    iwork, # mutate
 )
 
     arret = false
 
     ###### nmax - maximal number of steps
-    if iwork[1] == 0 
-        nmax = 100000
-    else
-        nmax = iwork[1]
-        if nmax < 0
-            println("WRONG INPUT IWORK[1]=", iwork[1])
-            arret = true
+    if options.maximum_allowed_steps < 0
+        if options.print_error_messages
+            println("Maximum Allowed steps cannot be negative")
         end
+        arret = true
     end
 
+    nmax = options.maximum_allowed_steps
+
     ###### nstiff -  parameters for stiffness detection
-    nstiff = iwork[4]
-    if nstiff == 0
-        nstiff = 1000
-    end
+    nstiff = options.stiffness_test_activation_step
+
     if nstiff < 0
         nstiff = nmax + 10
     end
 
-    ###### nrdens - number of dense output components
-    nrdens = iwork[5]
-    if (nrdens < 0) || (nrdens > n) 
-        println("CURIOUS INPUT IWORK[5]=", iwork[5])
-        arret = true
-    else
-        if nrdens == n
-            for i in range(1, nrdens)
-                iwork[20 + i] = i
-            end
-        end
-    end
-
     ###### uround - smallest number satisfying 1.0 + uround > 1.0
-    
-    if work[1] == 0.0
-        uround = 2.3e-16
-    else
-        uround = work[1]
-        if (uround <= 1e-35) || (uround >= 1.0)
+
+    uround = options.uround 
+    if (uround <= 1e-35) || (uround >= 1.0)
+        if options.print_error_messages
             println("WHICH MACHINE DO YOU HAVE? YOUR UROUND WAS:", work[1])
-            arret = true
         end
+        arret = true
     end
 
     ####### safety factor
+    safe = options.safety_factor
     
-    if work[2] == 0.0 
-        safe = 0.9
-    else
-        safe = work[2]
-        if (safe >= 1.0) || (safe <= 1e-4)
+    if (safe >= 1.0) || (safe <= 1e-4)
+        if options.print_error_messages
             println("CURIOUS INPUT FOR SAFETY FACTOR WORK[2]=", work[2])
-            arret = true
         end
+        arret = true
     end
 
     ###### fac1, fac2 - parameters for step size selection
-    if work[3] == 0.0
-        fac1 = 0.2
-    else
-        fac1 = work[3]
-    end
-
-    if work[4] == 0.0
-        fac2 = 10.0
-    else
-        fac2 = work[4]
-    end
+    fac1 = options.step_size_selection_one
+    fac2 = options.step_size_selection_two
 
     ###### beta - for step control stabilization
-    if work[5] == 0.0
-        beta = 0.04
-    else
-        if work[5] < 0.0
-            beta = 0.0
-        else 
-            beta = work[5]
-            if beta > 0.2
-                println("CURIOUS INPUT FOR BETA: WORK[5]=", work[5])
-                arret = true
-            end
+
+    beta = options.beta
+    if beta > 0.2
+        if options.print_error_messages
+            println("CURIOUS INPUT FOR BETA: ", beta)
         end
+        arret = true
     end
 
     ####### maximal step size
+
     if work[6] == 0.0
         hmax = xend-x
     else
-        hmax = work[6]
+        hmax = options.maximal_step_size
     end
 
     ####### initial step size
-    h = work[7]
+    h = options.initial_step_size
 
     ####### prepare entry-points for arrays in work
-    iey1 = 21
+    iey1 = 1
     iek1 = iey1 + n
     iek2 = iek1 + n
     iek3 = iek2 + n
@@ -119,19 +86,13 @@ function dopri5(
     iek5 = iek4 + n
     iek6 = iek5 + n
     ieys = iek6 + n
-    # ieco = ieys + n
 
     ####### total storage requirement
-    istore = ieys+5*nrdens-1
+    istore = ieys
     if istore > length(work)
-        println("INSUFFICIENT STORAGE FOR WORK, MIN. LWORK=", istore)
-        arret = true
-    end
-
-    icomp = 21 
-    istore = icomp + nrdens - 1
-    if istore > length(iwork)
-        println("INSUFFICIENT STORAGE FOR IWORK, MIN. LIWORK=", istore)
+        if options.print_error_messages
+            println("INSUFFICIENT STORAGE FOR WORK, MIN. LWORK=", istore)
+        end
         arret = true
     end
 
@@ -151,9 +112,7 @@ function dopri5(
         view(work, iek4:iek4+n-1), 
         view(work, iek5:iek5+n-1), 
         view(work, iek6:iek6+n-1),
-        view(work, ieys:ieys+n-1),
-        nrdens
-    )
+        view(work, ieys:ieys+n-1))
     
     return dp5_report
 
@@ -185,8 +144,7 @@ function dopcor(
     k4, 
     k5, 
     k6, 
-    ysti,
-    nrd
+    ysti
 )
     ##### Initializations
 
@@ -384,10 +342,6 @@ function dopcor(
                     naccpt, 
                     nrejct
                 )
-                #iwork[17] = nfcn 
-                #iwork[18] = nstep
-                #iwork[19] = naccpt
-                #iwork[20] = nrejct
             end
 
             if(abs(hnew) > hmax)
@@ -530,68 +484,6 @@ function cdopri()
         22.0/525.0,
         -1.0/40.0
     ]
-end
-
-function debug_dopcor(
-    n,
-    fcn, 
-    x, 
-    y, 
-    xend,
-    hmax,
-    h, 
-    rtol, 
-    atol, 
-    itol, 
-    nmax,
-    uround, 
-    nstiff, 
-    safe, 
-    beta, 
-    fac1, 
-    fac2, 
-    y1, 
-    k1, 
-    k2, 
-    k3, 
-    k4, 
-    k5, 
-    k6, 
-    ysti,
-    nrd,  
-    rpar,
-    ipar
-)
-    println("n ", n)
-    println("fcn ", fcn)
-    println("x ", x)
-    println("y ", y)
-    println("xend ", xend)
-    println("hmax ", hmax)
-    println("h ", h)
-    println("rtol ", rtol)
-    println("atol ", atol)
-    println("itol ", itol)
-    println("nmax ", nmax)
-    println("uround ", uround)
-    println("nstiff ", nstiff)
-    println("safe ",safe)
-    println("beta ", beta)
-    println("fac1 ", fac1)
-    println("fac2 ", fac2)
-    println("y1 ", y1)
-    println("k1 ", k1)
-    println("k2 ", k2)
-    println("k3 ", k3)
-    println("k4 ", k4)
-    println("k5 ", k5)
-    println("k6 ", k6)
-    println("ysti ", ysti)
-    println("nrd ",nrd)
-    println("rpar ", rpar)
-    println("ipar ", ipar)
-
-
 end
 
 # FORTRAN sign - returns the value of a with the sign of B
