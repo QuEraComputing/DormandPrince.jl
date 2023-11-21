@@ -4,13 +4,14 @@ include("dp5.jl")
 
 function fcn(n, x, y, f)
     f[1] = ℯ^x
+    f[2] = ℯ^x
 end
 
-y = [1.0]
-work = zeros(8)
+y = [1.0, 1.0]
+work = zeros(16)
 
 dopri5(
-    1,
+    2,
     fcn,
     0.0,
     y,
