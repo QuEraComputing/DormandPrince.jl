@@ -1,6 +1,6 @@
 include("dp5_types.jl")
 
-function dopri5(
+function dopri5_schrodinger(
     n,
     fcn, 
     x, # mutate
@@ -105,14 +105,14 @@ function dopri5(
     dp5_report = dopcor(
         n, fcn, x, y, xend, hmax, h, rtol, atol, itol, nmax, uround, nstiff,
         safe, beta, fac1, fac2, 
-        view(work, iey1:iey1+n-1), 
-        view(work, iek1:iek1+n-1), 
-        view(work, iek2:iek2+n-1), 
-        view(work, iek3:iek3+n-1),
-        view(work, iek4:iek4+n-1), 
-        view(work, iek5:iek5+n-1), 
-        view(work, iek6:iek6+n-1),
-        view(work, ieys:ieys+n-1))
+        work[1],
+        work[2],
+        work[3],
+        work[4],
+        work[5],
+        work[6],
+        work[7],
+        work[8])
     
     return dp5_report
 
@@ -403,7 +403,7 @@ function hinit(
         end
     else 
         for i in range(1, n)
-            sk = atol[i] + rtol[i]*abs(y[i])
+            sk = atol[i] + rtol[i]*abs.(y[i])
             dnf += (f0[i]/sk)^2
             dny += (y[i]/sk)^2
         end
