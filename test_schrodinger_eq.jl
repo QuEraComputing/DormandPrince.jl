@@ -5,7 +5,7 @@ Get Schrodinger Equation to work with Dopri5
 
 using Bloqade
 using BloqadeExpr: Hamiltonian
-include("dp5_schrodinger.jl")
+include("dp5.jl")
 include("dp5_types.jl")
 
 nsites = 1;
@@ -27,18 +27,21 @@ function fcn(n, x, y, f)
     println(x)
     println(y)
     println(f)
-    eq(f, y[1], nothing, x)
+    #eq(f, y[1], nothing, x)
+    eq(f, y, nothing, x)
 end
 
-y = [zeros(ComplexF64, 2)] # initial y_0 at x = 0``
-work = [zeros(ComplexF64, 2) for i in range(1,8)]
+# y = [zeros(ComplexF64, 2)] # initial y_0 at x = 0``
+y = statevec(reg)
+# work = [zeros(ComplexF64, 2) for i in range(1,8)]
+work = zeros(ComplexF64, 16)
 
-dopri5_schrodinger(
-    1,
+dopri5(
+    2,
     fcn,
     0.0,
     y,
-    1.0,
+    1.6,
     1e-10,
     1e-10,
     0,

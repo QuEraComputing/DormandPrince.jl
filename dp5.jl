@@ -232,7 +232,7 @@ function dopcor(
         
         nstep += 1
 
-        ####### First 6 stages
+        ####### First 6 stages, just set to equality and should work bc everything is vector (no need for loops)
         # 22
         for i in range(1, n)
             y1[i] = y[i] + h*a21*k1[i]
@@ -273,15 +273,15 @@ function dopcor(
 
         ###### Error Estimation
         err = 0.0
-        if itol == 0 
+        if itol == 0 # do some kind of reduction here
             for i in range(1, n)
                 sk = atoli + rtoli*max(abs(y[i]), abs(y1[i]))
-                err += (k4[i]/sk)^2
+                err += abs(k4[i]/sk)^2 
             end
         else
             for i in range(1, n)
                 sk = atoli[i] + rtoli[i]*max(abs(y[i]), abs(y1[i]))
-                err += (k4[i]/sk)^2
+                err += abs(k4[i]/sk)^2
             end
         end
         err = sqrt(err/n)
@@ -291,7 +291,7 @@ function dopcor(
         ###### Lund-Stabilization
         fac = fac11/(facold^beta)
         ###### we require fac1 <= hnew/h <= fac2
-        fac = max(facc2, min(facc1, fac/safe))
+        fac = max(facc2, min(facc1, fac/safe)) # facc1, facc2, fac must be Float64 
         hnew = h/fac
         if err <= 1.0 
             ###### Step is accepted
@@ -395,20 +395,32 @@ function hinit(
     atoli = atol[1]
     rtoli = rtol[1]
     
-    if itol == 0
+    # [dnf, dny] = mapreduce(+, atol, rtol, f0, y; init=[0.0, 0.0]) do (atoli, rtoli, f0i, yi)
+    #     sk = atoli + rtoli*abs(yi)
+    #     dnf = abs(f0i/sk)^2
+    #     dny = abs(yi/sk)^2
+    #     [dnf, dny]
+    # end
+
+    # potentially replace work array with a struct to save state and then 
+    # allow for update method 
+
+    if itol == 0 # should also have a reduction here
         for i in range(1, n)
             sk = atoli + rtoli*abs(y[i])
-            dnf += (f0[i]/sk)^2
-            dny += (y[i]/sk)^2
+            dnf += abs(f0[i]/sk)^2
+            dny += abs(y[i]/sk)^2
         end
     else 
         for i in range(1, n)
             sk = atol[i] + rtol[i]*abs(y[i])
-            dnf += (f0[i]/sk)^2
-            dny += (y[i]/sk)^2
+            dnf += abs(f0[i]/sk)^2 # wrap with absolute values
+            dny += abs(y[i]/sk)^2
         end
     end
-    
+   
+    # problem with comparing ComplexF64 with Float64
+    # take abs of dnf 
     if (dnf <= 1.0e-10) || (dny <= 1.0e-10)
         h = 1.0e-6
     else
