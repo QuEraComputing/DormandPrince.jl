@@ -24,7 +24,8 @@ end
     stiffness_test_activation_step::Int64 = 1000
 end
 
-mutable struct DP5Solver{StateType <: AbtractVector, T <: Real}
+
+mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
     f::Function
     x::T
     x_end::T
@@ -48,6 +49,7 @@ mutable struct DP5Solver{StateType <: AbtractVector, T <: Real}
         new{StateType, T}(f, x, x_end, y, k1, k2, k3, k4, k5, k6, DP5Options(;kw...))
     end
 end
+
 
 
 
