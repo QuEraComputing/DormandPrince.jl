@@ -193,8 +193,11 @@ function dopcor(
     naccpt = 0
     nrejct = 0
 
-    atoli = atol[1] # works with integers or arrays
-    rtoli = rtol[1] # works with integers or arrays
+    #atoli = atol[1] # works with integers or arrays
+    #rtoli = rtol[1] # works with integers or arrays
+    atol_iter = atol isa Number ? repeated(atol) : atol
+    rtol_iter = rtol isa Number ? repeated(rtol) : rtol
+
     last = false
     hlamb = 0.0
     iasti = 0
@@ -260,6 +263,8 @@ function dopcor(
 
         ###### Error Estimation
         err = 0.0
+
+        #=
         if itol == 0 # do some kind of reduction here
             for i in range(1, n)
                 sk = atoli + rtoli*max(abs(y[i]), abs(y1[i]))
@@ -271,6 +276,13 @@ function dopcor(
                 err += abs(k4[i]/sk)^2
             end
         end
+        =#
+
+        err = mapreduce(+, atol_iter, rtol_iter, k4, y, ysti) do atoli, rtoli, k4i, yi, ystii
+            sk = atoli + rtoli*max(abs(yi), abs(ystii))
+            abs(k4i/sk)^2
+        end
+
         err = sqrt(err/n)
 
         ###### Computation of hnew
@@ -289,13 +301,18 @@ function dopcor(
                 stnum = 0.0
                 stden = 0.0
                 
+                #=
                 for i in range(1, n)
                     stnum += abs(k2[i]-k6[i])^2 # added "abs" per Phillip's advice
                     stden += abs(y1[i]-ysti[i])^2
                 end
-                
-                #stnum += abs(k2 - k6)^2
-                #stdent += abs(y1 - ysti)^2
+                =#
+
+                stnum, stden = mapreduce(.+, k2, k6, y1, ysti) do k2i, k6i, y1i, ystii
+                    stnum = abs(k2i-k6i)^2
+                    stden = abs(y1i-ystii)^2
+                    stnum, stden
+                end
 
                 if stden > 0.0
                     hlamb = h*sqrt(stnum/stden)
@@ -399,6 +416,7 @@ function hinit(
 
     atol_iter = atol isa Number ? repeated(atol) : atol
     rtol_iter = rtol isa Number ? repeated(rtol) : rtol
+
     dnf, dny = mapreduce(.+, atol_iter, rtol_iter, f0, y) do atoli, rtoli, f0i, yi
         sk = atoli + rtoli*abs(yi)
         dnf = abs(f0i/sk)^2
