@@ -33,7 +33,7 @@ function dopri5(
     uround = solver_options.uround 
     if (uround <= 1e-35) || (uround >= 1.0)
         if solver_options.print_error_messages
-            println("WHICH MACHINE DO YOU HAVE? YOUR UROUND WAS:", work[1])
+            println("WHICH MACHINE DO YOU HAVE? YOUR UROUND WAS:", uround)
         end
         arret = true
     end 
@@ -43,7 +43,7 @@ function dopri5(
     
     if (safe >= 1.0) || (safe <= 1e-4)
         if solver_options.print_error_messages
-            println("CURIOUS INPUT FOR SAFETY FACTOR WORK[2]=", work[2])
+            println("CURIOUS INPUT FOR SAFETY FACTOR WORK[2]=", safe)
         end
         arret = true
     end
