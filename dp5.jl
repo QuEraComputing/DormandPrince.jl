@@ -1,4 +1,5 @@
-include("dp5_types.jl")
+# include("dp5_types.jl")
+using Base.Iterators:repeated
 
 function dopri5(
     n,
@@ -197,13 +198,13 @@ function dopcor(
     last = false
     hlamb = 0.0
     iasti = 0
-    println("First call to fcn")
+    nonsti = 0
     fcn(n, x, y, k1)
     hmax = abs(hmax)
     iord = 5
     
     if h == 0.0
-        h = hinit(n, fcn, x, y, xend, posneg, k1, k2, k3, iord, hmax, atol, rtol, itol)
+        h = hinit(n, fcn, x, y, xend, posneg, k1, k2, k3, iord, hmax, atol, rtol)
     end
 
     nfcn += 2
@@ -234,40 +235,26 @@ function dopcor(
 
         ####### First 6 stages, just set to equality and should work bc everything is vector (no need for loops)
         # 22
-        for i in range(1, n)
-            y1[i] = y[i] + h*a21*k1[i]
-            fcn(n, x+c2*h, y1, k2)
-        end
+        y1 = y + h * a21 * k1
+        fcn(n, x + c2 * h, y1, k2)
         # 23
-        for i in range(1, n)
-            y1[i] = y[i] + h*(a31*k1[i]+a32*k2[i])
-            fcn(n, x+c3*h, y1, k3)
-        end
+        y1 = y + h * ( a31 * k1 + a32 * k2)
+        fcn(n, x + c3 * h, y1, k3)
         # 24
-        for i in range(1, n)
-            y1[i] = y[i] + h*(a41*k1[i]+a42*k2[i]+a43*k3[i])
-            fcn(n, x+c4*h, y1, k4)
-        end
+        y1 = y + h * (a41 * k1 + a42 * k2 + a43 * k3)
+        fcn(n, x + c4 * h, y1, k4)
         # 25
-        for i in range(1, n)
-            y1[i] = y[i] + h*(a51*k1[i]+a52*k2[i]+a53*k3[i]+a54*k4[i])
-            fcn(n, x+c5*h, y1, k5)
-        end
+        y1 = y + h * (a51 * k1 + a52 * k2 + a53 * k3 + a54 * k4)
+        fcn(n, x+c5*h, y1, k5)
         # 26
-        for i in range(1, n)
-            ysti[i] = y[i] + h*(a61*k1[i]+a62*k2[i]+a63*k3[i]+a64*k4[i]+a65*k5[i])
-            xph = x + h
-            fcn(n, xph, ysti, k6)
-        end
+        ysti = y + h * (a61 * k1 + a62 * k2 + a63 * k3 + a64 * k4 + a65 * k5)
+        xph = x + h
+        fcn(n, xph, ysti, k6)
         # 27
-        for i in range(1, n)
-            y1[i] = y[i] + h*(a71*k1[i]+a73*k3[i]+a74*k4[i]+a75*k5[i]+a76*k6[i])
-            fcn(n, xph, y1, k2)
-        end
+        y1 = y + h * (a71 * k1 + a73 * k3 + a74 * k4 + a75 * k5 + a76 * k6)
+        fcn(n, xph, y1, k2)
         # 28
-        for i in range(1, n)
-            k4[i] = h*(e1*k1[i]+e3*k3[i]+e4*k4[i]+e5*k5[i]+e6*k6[i]+e7*k2[i])
-        end
+        k4 = h * (e1 * k1 + e3 * k3 + e4 * k4 + e5 * k5 + e6 * k6 + e7 * k2)
 
         nfcn += 6
 
@@ -301,17 +288,21 @@ function dopcor(
             if (mod(naccpt, nstiff) == 0) || (iasti > 0)
                 stnum = 0.0
                 stden = 0.0
+                
                 for i in range(1, n)
-                    stnum += (k2[i]-k6[i])^2
-                    stden += (y1[i]-ysti[i])^2
+                    stnum += abs(k2[i]-k6[i])^2 # added "abs" per Phillip's advice
+                    stden += abs(y1[i]-ysti[i])^2
                 end
+                
+                #stnum += abs(k2 - k6)^2
+                #stdent += abs(y1 - ysti)^2
 
                 if stden > 0.0
                     hlamb = h*sqrt(stnum/stden)
                 end
 
+                
                 if hlamb > 3.25
-                    nonsti = 0
                     iasti += 1
                     if iasti == 15
                         println("THE PROBLEM SEEMS TO BECOME STIFF AT X = ", x)    
@@ -325,10 +316,14 @@ function dopcor(
             end
 
             # 44
+            #=
             for i in range(1, n)
                 k1[i] = k2[i]
                 y[i] = y1[i]
             end
+            =#
+            copyto!(k1, k2)
+            copyto!(y, y1)
 
             x = xph
 
@@ -382,7 +377,6 @@ function hinit(
     hmax, 
     atol, 
     rtol,
-    itol
 )
     #=
     Compute a first guess for explicit euler as
@@ -392,8 +386,8 @@ function hinit(
     =#
     dnf = 0.0
     dny = 0.0
-    atoli = atol[1]
-    rtoli = rtol[1]
+    #atoli = atol[1]
+    #rtoli = rtol[1]
     
     # [dnf, dny] = mapreduce(+, atol, rtol, f0, y; init=[0.0, 0.0]) do (atoli, rtoli, f0i, yi)
     #     sk = atoli + rtoli*abs(yi)
@@ -402,22 +396,17 @@ function hinit(
     #     [dnf, dny]
     # end
 
-    # potentially replace work array with a struct to save state and then 
-    # allow for update method 
 
-    if itol == 0 # should also have a reduction here
-        for i in range(1, n)
-            sk = atoli + rtoli*abs(y[i])
-            dnf += abs(f0[i]/sk)^2
-            dny += abs(y[i]/sk)^2
-        end
-    else 
-        for i in range(1, n)
-            sk = atol[i] + rtol[i]*abs(y[i])
-            dnf += abs(f0[i]/sk)^2 # wrap with absolute values
-            dny += abs(y[i]/sk)^2
-        end
+    atol_iter = atol isa Number ? repeated(atol) : atol
+    rtol_iter = rtol isa Number ? repeated(rtol) : rtol
+    dnf, dny = mapreduce(.+, atol_iter, rtol_iter, f0, y) do atoli, rtoli, f0i, yi
+        sk = atoli + rtoli*abs(yi)
+        dnf = abs(f0i/sk)^2
+        dny = abs(yi/sk)^2
+        dnf, dny
     end
+
+
    
     # problem with comparing ComplexF64 with Float64
     # take abs of dnf 
@@ -430,22 +419,19 @@ function hinit(
     h = sign(h, posneg)
 
     ###### Perform an explicit step
+    #=
     for i in range(1, n)
         y1[i] = y[i] + h*f0[i]
     end 
+    =#
+    y1 = y + h*f0
     fcn(n, x+h, y1, f1)
     ###### Estimate the second derivative of the solution
     der2 = 0.0
-    if itol == 0 
-        for i in range(1, n)
-            sk = atoli + rtoli*abs(y[i])
-            der2 += ((f1[i]-f0[i])/sk)^2
-        end
-    else
-        for i in range(1, n)
-            sk = atoli[i] + rtoli[i]*abs(y[i])
-            der2 += ((f1[i]-f0[i])/sk)^2
-        end
+        
+    der2 = mapreduce(+, atol_iter, rtol_iter, f1, f0, y) do atoli, rtoli, f1i, f0i, yi
+        sk = atoli + rtoli*abs(yi)
+        ((f1i-f0i)/sk)^2
     end
 
     der2 = sqrt(der2)/h
@@ -499,7 +485,7 @@ function cdopri()
     ]
 end
 
-# FORTRAN sign - returns the value of a with the sign of B
+# FORTRAN sign - returns the value of A with the sign of B
 function sign(a,b)
     if b >= 0
         sign = 1.0

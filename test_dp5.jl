@@ -1,4 +1,5 @@
 include("dp5.jl")
+include("dp5_types.jl")
 
 # FCN must follow format FCN(N, X, Y, F, RPAR, IPAR)
 
