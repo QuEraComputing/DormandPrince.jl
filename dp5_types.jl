@@ -22,11 +22,10 @@ end
     maximum_allowed_steps::Int64 = 100000
     print_error_messages::Bool = true
     stiffness_test_activation_step::Int64 = 1000
+
+    atol::Union{T, Vector{T}} = 1e-10
+    rtol::Union{T, Vector{T}} = 1e-10
 end
-
-
-# potentially replace work array with a struct to save state and then 
-# allow for update method 
 
 # should "dopri5" take in DP5Solver or should DP5Solver have some associated method
 # attached to it? 
@@ -40,6 +39,8 @@ mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
     k4::StateType
     k5::StateType
     k6::StateType
+    y1::StateType
+    ysti::StateType
     options::DP5Options
 
     function DP5Solver(f::Function, x::T, y::StateType; kw...) where {StateType <: AbstractVector, T<:Real}
@@ -50,7 +51,9 @@ mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
         k4 = copy(y)
         k5 = copy(y)
         k6 = copy(y)
-        new{StateType, T}(f, x, y, k1, k2, k3, k4, k5, k6, DP5Options(;kw...))
+        y1 = copy(y)
+        ysti = copy(y)
+        new{StateType, T}(f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti, DP5Options(;kw...))
     end
 end
 

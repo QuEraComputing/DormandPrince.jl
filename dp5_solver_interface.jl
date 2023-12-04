@@ -1,64 +1,60 @@
-# include("dp5_types.jl")
 using Base.Iterators:repeated
-
+include("dp5_types.jl")
+#=
+interface will be integrate(solver, x_end)
+=#
 function dopri5(
-    n,
-    fcn, 
-    x, # mutate
-    y, # mutate
-    xend, 
-    rtol,
-    atol, 
-    options,
-    work,  
+   solver::DP5Solver,
+   xend
 )
-
     arret = false
 
+    solver_options = solver.options
+
     ###### nmax - maximal number of steps
-    if options.maximum_allowed_steps < 0
-        if options.print_error_messages
+    if solver_options.maximum_allowed_steps < 0
+        if solver_options.print_error_messages
             println("Maximum Allowed steps cannot be negative")
         end
         arret = true
     end
 
-    nmax = options.maximum_allowed_steps
+    nmax = solver_options.maximum_allowed_steps
 
     ###### nstiff -  parameters for stiffness detection
-    nstiff = options.stiffness_test_activation_step
+    nstiff = solver_options.stiffness_test_activation_step
 
     if nstiff < 0
         nstiff = nmax + 10
-    end
+    end 
 
     ###### uround - smallest number satisfying 1.0 + uround > 1.0
 
-    uround = options.uround 
+    uround = solver_options.uround 
     if (uround <= 1e-35) || (uround >= 1.0)
-        if options.print_error_messages
+        if solver_options.print_error_messages
             println("WHICH MACHINE DO YOU HAVE? YOUR UROUND WAS:", work[1])
         end
         arret = true
-    end
+    end 
 
     ####### safety factor
-    safe = options.safety_factor
+    safe = solver_options.safety_factor
     
     if (safe >= 1.0) || (safe <= 1e-4)
-        if options.print_error_messages
+        if solver_options.print_error_messages
             println("CURIOUS INPUT FOR SAFETY FACTOR WORK[2]=", work[2])
         end
         arret = true
     end
 
     ###### fac1, fac2 - parameters for step size selection
-    fac1 = options.step_size_selection_one
-    fac2 = options.step_size_selection_two
-
+    fac1 = solver_options.step_size_selection_one
+    fac2 = solver_options.step_size_selection_two
+   
     ###### beta - for step control stabilization
 
-    beta = options.beta
+    beta = solver_options.beta
     if beta > 0.2
         if options.print_error_messages
             println("CURIOUS INPUT FOR BETA: ", beta)
@@ -68,83 +64,59 @@ function dopri5(
 
     ####### maximal step size
 
-    if work[6] == 0.0
-        hmax = xend-x
+    if solver_options.maximal_step_size == 0.0
+        hmax = xend-solver.x
     else
-        hmax = options.maximal_step_size
+        hmax = solver_options.maximal_step_size
     end
 
     ####### initial step size
-    h = options.initial_step_size
+    h = solver_options.initial_step_size
 
-    ####### prepare entry-points for arrays in work
-    iey1 = 1
-    iek1 = iey1 + n
-    iek2 = iek1 + n
-    iek3 = iek2 + n
-    iek4 = iek3 + n
-    iek5 = iek4 + n
-    iek6 = iek5 + n
-    ieys = iek6 + n
+    #=
+    Total Storage Requirement check used to live here but
+    is no longer needed because the DP5Solver constructor
+    ensures enough space is allocated based on the size of
+    y :D 
+    =#
 
-    ####### total storage requirement
-    istore = ieys
-    if istore > length(work)
-        if options.print_error_messages
-            println("INSUFFICIENT STORAGE FOR WORK, MIN. LWORK=", istore)
-        end
-        arret = true
-    end
 
-    ###### When a fail has occurred, return with idid = -1
+    ####### When a fail has occured, return with idid = -1
     if arret
-        return DP5Report(x, -1, 0, 0, 0, 0)
+        return DP5REport(x, -1, 0, 0, 0, 0)
     end
 
-    # indices to work start at the starting locations but for a view we need 
     dp5_report = dopcor(
-        n, fcn, x, y, xend, hmax, h, rtol, atol, nmax, uround, nstiff,
-        safe, beta, fac1, fac2, 
-        #view(work, iey1:iey1+n-1), 
-        view(work, iek1:iek1+n-1), 
-        view(work, iek2:iek2+n-1), 
-        view(work, iek3:iek3+n-1),
-        view(work, iek4:iek4+n-1), 
-        view(work, iek5:iek5+n-1), 
-        view(work, iek6:iek6+n-1),
-        #view(work, ieys:ieys+n-1)
+        solver, # contains x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
+        xend, 
+        hmax, 
+        h,
+        nmax, 
+        uround, 
+        nstiff,
+        safe, 
+        beta, 
+        fac1, 
+        fac2,
+
     )
-    
+
     return dp5_report
 
 end
 
-# return idid, x, StepsEvalReport
 function dopcor(
-    n,
-    fcn, 
-    x, 
-    y, 
-    xend,
+    solver, # contains f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
+    xend, 
     hmax,
     h, 
-    rtol, 
-    atol, 
     nmax,
-    uround, 
-    nstiff, 
-    safe, 
+    uround,
+    nstiff,
+    safe,
     beta, 
     fac1, 
     fac2, 
-    #y1, 
-    k1, 
-    k2, 
-    k3, 
-    k4, 
-    k5, 
-    k6,
-    #ysti
 )
     ##### Initializations
 
@@ -184,7 +156,7 @@ function dopcor(
     expo1 = 0.20-beta*0.75
     facc1 = 1.0/fac1
     facc2 = 1.0/fac2
-    posneg = sign(1.0, xend-x)
+    posneg = sign(1.0, xend-solver.x)
 
     ###### Initial Preparations
     nfcn   = 0
@@ -192,8 +164,8 @@ function dopcor(
     naccpt = 0
     nrejct = 0
 
-    #atoli = atol[1] # works with integers or arrays
-    #rtoli = rtol[1] # works with integers or arrays
+    atol = solver.options.atol
+    rtol = solver.options.rtol
     atol_iter = atol isa Number ? repeated(atol) : atol
     rtol_iter = rtol isa Number ? repeated(rtol) : rtol
 
@@ -201,35 +173,36 @@ function dopcor(
     hlamb = 0.0
     iasti = 0
     nonsti = 0
-    fcn(n, x, y, k1)
+    # fcn(n, x, y, k1)
+    solver.f(solver.x, solver.y, solver.k1)
     hmax = abs(hmax)
     iord = 5
-    
+
     if h == 0.0
-        h = hinit(n, fcn, x, y, xend, posneg, k1, k2, k3, iord, hmax, atol, rtol)
+        # solver contains, fcn, x, y, k1, k2, k3, atol, rtol
+        h = hinit(solver, posneg, iord, hmax)
     end
 
     nfcn += 2
     reject = false
-
-
+    
     ###### Basic Integration Step
     xph = 0.0 # need to put this here because FORTRAN seems to be looser with scoping
     while true
         if nstep > nmax
             # GOTO 78
             println(" MORE THAN NMAX = ", nmax, " STEPS ARE NEEDED")
-            return DP5Report(x, -2, 0, 0, 0, 0)
+            return DP5Report(solver.x, -2, 0, 0, 0, 0)
         end
         
-        if (0.10 * abs(h)) <= abs(x)*uround 
+        if (0.10 * abs(h)) <= abs(solver.x)*uround 
             # GOTO 77
             println("STEP SIZE TOO SMALL, H = ", h)
-            return DP5Report(x, -3, 0, 0, 0, 0)
+            return DP5Report(solver.x, -3, 0, 0, 0, 0)
         end
 
-        if ((x+1.01*h-xend)*posneg) > 0.0
-            h = xend-x
+        if ((solver.x+1.01*h-xend)*posneg) > 0.0
+            h = xend-solver.x
             last = true
         end
         
@@ -237,52 +210,38 @@ function dopcor(
 
         ####### First 6 stages, just set to equality and should work bc everything is vector (no need for loops)
         # 22
-        y1 = y + h * a21 * k1
-        fcn(n, x + c2 * h, y1, k2)
+        copyto!(solver.y1, solver.y + h * a21 * solver.k1)
+        solver.f(solver.x + c2 * h, solver.y1, solver.k2)
         # 23
-        y1 = y + h * ( a31 * k1 + a32 * k2)
-        fcn(n, x + c3 * h, y1, k3)
+        copyto!(solver.y1, solver.y + h * (a31 * solver.k1 + a32 * solver.k2))
+        solver.f(solver.x + c3 * h, solver.y1, solver.k3)
         # 24
-        y1 = y + h * (a41 * k1 + a42 * k2 + a43 * k3)
-        fcn(n, x + c4 * h, y1, k4)
+        copyto!(solver.y1, solver.y + h * (a41 * solver.k1 + a42 * solver.k2 + a43 * solver.k3))
+        solver.f(solver.x + c4 * h, solver.y1, solver.k4)
         # 25
-        y1 = y + h * (a51 * k1 + a52 * k2 + a53 * k3 + a54 * k4)
-        fcn(n, x+c5*h, y1, k5)
+        copyto!(solver.y1, solver.y + h * (a51 * solver.k1 + a52 * solver.k2 + a53 * solver.k3 + a54 * solver.k4))
+        solver.f(solver.x + c5*h, solver.y1, solver.k5)
         # 26
-        ysti = y + h * (a61 * k1 + a62 * k2 + a63 * k3 + a64 * k4 + a65 * k5)
-        xph = x + h
-        fcn(n, xph, ysti, k6)
+        copyto!(solver.ysti, solver.y + h * (a61 * solver.k1 + a62 * solver.k2 + a63 * solver.k3 + a64 * solver.k4 + a65 * solver.k5))
+        xph = solver.x + h
+        solver.f(xph, solver.ysti, solver.k6)
         # 27
-        y1 = y + h * (a71 * k1 + a73 * k3 + a74 * k4 + a75 * k5 + a76 * k6)
-        fcn(n, xph, y1, k2)
+        copyto!(solver.y1, solver.y + h * (a71 * solver.k1 + a73 * solver.k3 + a74 * solver.k4 + a75 * solver.k5 + a76 * solver.k6))
+        solver.f(xph, solver.y1, solver.k2)
         # 28
-        k4 = h * (e1 * k1 + e3 * k3 + e4 * k4 + e5 * k5 + e6 * k6 + e7 * k2)
+        copyto!(solver.k4, h * (e1 * solver.k1 + e3 * solver.k3 + e4 * solver.k4 + e5 * solver.k5 + e6 * solver.k6 + e7 * solver.k2))
 
         nfcn += 6
 
         ###### Error Estimation
         err = 0.0
 
-        #=
-        if itol == 0 # do some kind of reduction here
-            for i in range(1, n)
-                sk = atoli + rtoli*max(abs(y[i]), abs(y1[i]))
-                err += abs(k4[i]/sk)^2 
-            end
-        else
-            for i in range(1, n)
-                sk = atoli[i] + rtoli[i]*max(abs(y[i]), abs(y1[i]))
-                err += abs(k4[i]/sk)^2
-            end
-        end
-        =#
-
-        err = mapreduce(+, atol_iter, rtol_iter, k4, y, ysti) do atoli, rtoli, k4i, yi, ystii
+        err = mapreduce(+, atol_iter, rtol_iter, solver.k4, solver.y, solver.ysti) do atoli, rtoli, k4i, yi, ystii
             sk = atoli + rtoli*max(abs(yi), abs(ystii))
             abs(k4i/sk)^2
         end
 
-        err = sqrt(err/n)
+        err = sqrt(err/length(solver.y))
 
         ###### Computation of hnew
         fac11 = err^expo1
@@ -299,15 +258,8 @@ function dopcor(
             if (mod(naccpt, nstiff) == 0) || (iasti > 0)
                 stnum = 0.0
                 stden = 0.0
-                
-                #=
-                for i in range(1, n)
-                    stnum += abs(k2[i]-k6[i])^2 # added "abs" per Phillip's advice
-                    stden += abs(y1[i]-ysti[i])^2
-                end
-                =#
 
-                stnum, stden = mapreduce(.+, k2, k6, y1, ysti) do k2i, k6i, y1i, ystii
+                stnum, stden = mapreduce(.+, solver.k2, solver.k6, solver.y1, solver.ysti) do k2i, k6i, y1i, ystii
                     stnum = abs(k2i-k6i)^2
                     stden = abs(y1i-ystii)^2
                     stnum, stden
@@ -331,23 +283,16 @@ function dopcor(
                 end
             end
 
-            # 44
-            #=
-            for i in range(1, n)
-                k1[i] = k2[i]
-                y[i] = y1[i]
-            end
-            =#
-            copyto!(k1, k2)
-            copyto!(y, y1)
+            copyto!(solver.k1, solver.k2)
+            copyto!(solver.y, solver.y1)
 
-            x = xph
+            solver.x = xph
 
             ###### Normal Exit
             if last 
                 h = hnew
                 return DP5Report(
-                    x, 
+                    solver.x, 
                     1, 
                     nfcn, 
                     nstep, 
@@ -377,22 +322,18 @@ function dopcor(
         h = hnew
     end
 
-end 
+
+
+end
 
 function hinit(
-    n, 
-    fcn, 
-    x, 
-    y, 
-    xend, 
+    solver, 
     posneg, 
-    f0, 
-    f1, 
-    y1, 
     iord,
-    hmax, 
-    atol, 
-    rtol,
+    hmax
+    # f0 arg is k1 from dopcor
+    # f1 arg is k2 from dopcor
+    # y1 arg is k3 from dopcor
 )
     #=
     Compute a first guess for explicit euler as
@@ -402,27 +343,19 @@ function hinit(
     =#
     dnf = 0.0
     dny = 0.0
-    #atoli = atol[1]
-    #rtoli = rtol[1]
-    
-    # [dnf, dny] = mapreduce(+, atol, rtol, f0, y; init=[0.0, 0.0]) do (atoli, rtoli, f0i, yi)
-    #     sk = atoli + rtoli*abs(yi)
-    #     dnf = abs(f0i/sk)^2
-    #     dny = abs(yi/sk)^2
-    #     [dnf, dny]
-    # end
 
+    atol = solver.options.rtol
+    rtol = solver.options.atol
 
     atol_iter = atol isa Number ? repeated(atol) : atol
     rtol_iter = rtol isa Number ? repeated(rtol) : rtol
 
-    dnf, dny = mapreduce(.+, atol_iter, rtol_iter, f0, y) do atoli, rtoli, f0i, yi
+    dnf, dny = mapreduce(.+, atol_iter, rtol_iter, solver.k1, solver.y) do atoli, rtoli, f0i, yi
         sk = atoli + rtoli*abs(yi)
         dnf = abs(f0i/sk)^2
         dny = abs(yi/sk)^2
         dnf, dny
     end
-
 
    
     # problem with comparing ComplexF64 with Float64
@@ -436,17 +369,15 @@ function hinit(
     h = sign(h, posneg)
 
     ###### Perform an explicit step
-    #=
-    for i in range(1, n)
-        y1[i] = y[i] + h*f0[i]
-    end 
-    =#
-    y1 = y + h*f0
-    fcn(n, x+h, y1, f1)
+    #y1 = y + h*f0
+    #fcn(n, x+h, y1, f1)
+    copyto!(solver.y1, solver.y + h*solver.k1)
+    solver.f(solver.x + h, solver.k3, solver.k2)
+
     ###### Estimate the second derivative of the solution
     der2 = 0.0
         
-    der2 = mapreduce(+, atol_iter, rtol_iter, f1, f0, y) do atoli, rtoli, f1i, f0i, yi
+    der2 = mapreduce(+, atol_iter, rtol_iter, solver.k2, solver.k1, solver.y) do atoli, rtoli, f1i, f0i, yi
         sk = atoli + rtoli*abs(yi)
         ((f1i-f0i)/sk)^2
     end
