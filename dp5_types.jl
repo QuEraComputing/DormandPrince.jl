@@ -1,5 +1,6 @@
-struct DP5Report 
-    x_final::Float64
+
+struct DP5Report{T <: Real}
+    x_final::T
     idid::Int64
 
     num_func_evals::Int64
