@@ -11,7 +11,7 @@ end
 
 @kwdef struct DP5Options{T <: Real}
     # originally in work[1] - work[7]
-    uround::T = 2.3e-16
+    uround::T = eps(T)
     safety_factor:: T = 0.9
     step_size_selection_one::T = 0.2
     step_size_selection_two::T = 10.0
