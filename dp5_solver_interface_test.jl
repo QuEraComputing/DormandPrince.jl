@@ -22,10 +22,7 @@ function fcn(x, y, f)
     eq(f, y, nothing, x)
 end
 
-# y = [zeros(ComplexF64, 2)] # initial y_0 at x = 0``
 y = statevec(reg)
-# work = [zeros(ComplexF64, 2) for i in range(1,8)]
-work = zeros(ComplexF64, 16)
 
 solver = DP5Solver(
     fcn,
