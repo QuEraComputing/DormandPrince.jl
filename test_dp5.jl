@@ -19,7 +19,6 @@ dopri5(
     1.0,
     1e-10,
     1e-10,
-    0,
     DP5Options(),
     work,# work, should be 8*N
 )

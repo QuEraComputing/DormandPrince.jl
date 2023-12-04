@@ -9,7 +9,6 @@ function dopri5(
     xend, 
     rtol,
     atol, 
-    itol,
     options,
     work,  
 )
@@ -104,7 +103,7 @@ function dopri5(
 
     # indices to work start at the starting locations but for a view we need 
     dp5_report = dopcor(
-        n, fcn, x, y, xend, hmax, h, rtol, atol, itol, nmax, uround, nstiff,
+        n, fcn, x, y, xend, hmax, h, rtol, atol, nmax, uround, nstiff,
         safe, beta, fac1, fac2, 
         view(work, iey1:iey1+n-1), 
         view(work, iek1:iek1+n-1), 
@@ -130,7 +129,6 @@ function dopcor(
     h, 
     rtol, 
     atol, 
-    itol, 
     nmax,
     uround, 
     nstiff, 

@@ -1,8 +1,3 @@
-#= 
-Get Schrodinger Equation to work with Dopri5
-* need to extract the SchrodingerEquation
-=#
-
 using Bloqade
 using BloqadeExpr: Hamiltonian
 include("dp5.jl")
@@ -10,7 +5,7 @@ include("dp5_types.jl")
 
 nsites = 1;
 atoms = generate_sites(ChainLattice(), nsites, scale = 5.74)
-h = rydberg_h(atoms; Ω = 10 * 2π, Δ = 0)
+h = rydberg_h(atoms; Ω = 11 * 2π, Δ = 0)
 reg = zero_state(1)
 # stop short of creating the SchrodingerProblem, we want the SchrodignerEquation
 # which we can than trivially wrap with the fcn(n,x,y,f) that DP5 accepts
@@ -24,10 +19,6 @@ eq = SchrodingerEquation(h, Hamiltonian(T, h, space))
 # invoke eq via eq(dstate, state, p, t::Number) 
 
 function fcn(n, x, y, f)
-    #println(x)
-    #println(y)
-    #println(f)
-    #eq(f, y[1], nothing, x)
     eq(f, y, nothing, x)
 end
 
@@ -44,8 +35,6 @@ dopri5(
     1.6,
     1e-10,
     1e-10,
-    0, # itol, determines if atol and rtol are scalar or vector but this probably isn't necessary
-       # if you vectorize properly
     DP5Options(),
     work,# work, should be 8*N
 )
