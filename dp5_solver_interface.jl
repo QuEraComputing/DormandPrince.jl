@@ -71,7 +71,8 @@ function dopri5(
     end
 
     ####### initial step size
-    h = solver_options.initial_step_size
+    #h = solver_options.initial_step_size
+    h = solver.current_h
 
     #=
     Total Storage Requirement check used to live here but
@@ -86,7 +87,7 @@ function dopri5(
         return DP5REport(x, -1, 0, 0, 0, 0)
     end
 
-    dp5_report = dopcor(
+    h, dp5_report = dopcor(
         solver, # contains x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
         xend, 
         hmax, 
@@ -100,6 +101,9 @@ function dopri5(
         fac2,
 
     )
+
+    # update with final h
+    solver.current_h = h
 
     return dp5_report
 
@@ -192,13 +196,13 @@ function dopcor(
         if nstep > nmax
             # GOTO 78
             println(" MORE THAN NMAX = ", nmax, " STEPS ARE NEEDED")
-            return DP5Report(solver.x, -2, 0, 0, 0, 0)
+            return h, DP5Report(solver.x, -2, 0, 0, 0, 0)
         end
         
         if (0.10 * abs(h)) <= abs(solver.x)*uround 
             # GOTO 77
             println("STEP SIZE TOO SMALL, H = ", h)
-            return DP5Report(solver.x, -3, 0, 0, 0, 0)
+            return h, DP5Report(solver.x, -3, 0, 0, 0, 0)
         end
 
         if ((solver.x+1.01*h-xend)*posneg) > 0.0
@@ -291,7 +295,7 @@ function dopcor(
             ###### Normal Exit
             if last 
                 h = hnew
-                return DP5Report(
+                return h, DP5Report(
                     solver.x, 
                     1, 
                     nfcn, 

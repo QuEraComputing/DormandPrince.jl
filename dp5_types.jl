@@ -33,6 +33,7 @@ end
 mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
     f::Function
     x::T
+    current_h::T
     y::StateType
     k1::StateType
     k2::StateType
@@ -54,7 +55,9 @@ mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
         k6 = copy(y)
         y1 = copy(y)
         ysti = copy(y)
-        new{StateType, T}(f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti, DP5Options(;kw...))
+        options = DP5Options(;kw...)
+
+        new{StateType, T}(f, x, options.initial_step_size, y, k1, k2, k3, k4, k5, k6, y1, ysti, options)
     end
 end
 
