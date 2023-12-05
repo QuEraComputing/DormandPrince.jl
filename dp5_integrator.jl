@@ -46,14 +46,9 @@ mutable struct DP5Iterator{T <: Real}
     solver::DP5Solver
     times::AbstractVector{T}
     index::Int
-    callback
 
     function DP5Iterator(solver::DP5Solver, times::AbstractVector{T}) where {T <: Real}
-        new{T}(solver, times, 1, nothing)
-    end
-
-    function DP5Iterator(solver::DP5Solver, times::AbstractVector{T}, callback::Function) where {T <: Real}
-        new{T}(solver, times, 1, callback)
+        new{T}(solver, times, 1)
     end
 end
 
