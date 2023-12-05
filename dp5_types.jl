@@ -58,52 +58,6 @@ mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
     end
 end
 
-#=
-function integrate(solver::DP5Solver{StateVec, T}, x_end::T) where {StateVec, T}
-    # integrate from solver.x to x_end
-    ...
-end
-
-# focus on first two interfaces for integrator, 
-# 
-
-solver = DP5Solver(fcn,0,y0)
-# low level interface
-integrate(solver, 0.1)
-# do stuff here
-integrate(solver, 0.2)
-# do stuff here
-integrate(solver, 0.3)
-
-# iterator interface
-# TODO: Check how to dispatch to Iterator of a specific type objects
-iterator = integrate(solver, times)
-
-for t,y in iterator:
-    #do stuff
-end
-
-# callback for each time in times
-integrate(callback, solver, times) -> Vector
-
-results = integrate(solver, times) do t, state
-    # do stuff with t and state
-end
-
-
-
-# 99% of use cases:
-function integrate(callback, solver::DP5Solver{StateVec, T}, times::AbstractVector{T}; sort_times::Bool = true) where {StateVec, T}
-    times = sort_times ? sorted(collect(times)) : times
-
-    result = []
-    for time in times
-        integrate(solver, time)
-        push!(result, callback(time, solver.y))
-    end
-end
-=#
-
 
 # DP5Options() = DP5Options(
 #     2.3e-16, #uround
