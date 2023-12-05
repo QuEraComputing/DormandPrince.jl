@@ -1,5 +1,6 @@
 using Base.Iterators:repeated
 include("dp5_types.jl")
+include("dp5_checks.jl")
 #=
 interface will be integrate(solver, x_end)
 =#
@@ -9,65 +10,55 @@ function dopri5(
 )
     arret = false
 
-    solver_options = solver.options
 
     ###### nmax - maximal number of steps
-    if solver_options.maximum_allowed_steps < 0
-        if solver_options.print_error_messages
+    if solver.options.maximum_allowed_steps < 0
+        if solver.options.print_error_messages
             println("Maximum Allowed steps cannot be negative")
         end
         arret = true
     end
 
-    nmax = solver_options.maximum_allowed_steps
-
     ###### nstiff -  parameters for stiffness detection
-    nstiff = solver_options.stiffness_test_activation_step
+    # nstiff = solver_options.stiffness_test_activation_step
 
-    if nstiff < 0
-        nstiff = nmax + 10
+    if solver.options.stiffness_test_activation_step < 0
+        solver.options.stiffness_test_activation_step = solver.options.maximum_allowed_steps + 10
     end 
 
     ###### uround - smallest number satisfying 1.0 + uround > 1.0
 
-    uround = solver_options.uround 
-    if (uround <= 1e-35) || (uround >= 1.0)
-        if solver_options.print_error_messages
-            println("WHICH MACHINE DO YOU HAVE? YOUR UROUND WAS:", uround)
+    if (solver.options.uround <= 1e-35) || (solver.options.uround >= 1.0)
+        if solver.options.print_error_messages
+            println("WHICH MACHINE DO YOU HAVE? YOUR UROUND WAS:", solver.options.uround)
         end
         arret = true
     end 
 
     ####### safety factor
-    safe = solver_options.safety_factor
-    
-    if (safe >= 1.0) || (safe <= 1e-4)
-        if solver_options.print_error_messages
-            println("CURIOUS INPUT FOR SAFETY FACTOR WORK[2]=", safe)
+    #safe = solver_options.safety_factor 
+    if (solver.options.safety_factor >= 1.0) || (solver.options.safety_factor <= 1e-4)
+        if solver.options.print_error_messages
+            println("CURIOUS INPUT FOR SAFETY FACTOR WORK[2]=", solver.options.safety_factor)
         end
         arret = true
     end
-
-    ###### fac1, fac2 - parameters for step size selection
-    fac1 = solver_options.step_size_selection_one
-    fac2 = solver_options.step_size_selection_two
    
     ###### beta - for step control stabilization
 
-    beta = solver_options.beta
-    if beta > 0.2
-        if options.print_error_messages
-            println("CURIOUS INPUT FOR BETA: ", beta)
+    if solver.options.beta > 0.2
+        if solver.options.print_error_messages
+            println("CURIOUS INPUT FOR BETA: ", solver.options.beta)
         end
         arret = true
     end
 
     ####### maximal step size
 
-    if solver_options.maximal_step_size == 0.0
+    if solver.options.maximal_step_size == 0.0
         hmax = xend-solver.x
     else
-        hmax = solver_options.maximal_step_size
+        hmax = solver.options.maximal_step_size
     end
 
     ####### initial step size
@@ -92,14 +83,6 @@ function dopri5(
         xend, 
         hmax, 
         h,
-        nmax, 
-        uround, 
-        nstiff,
-        safe, 
-        beta, 
-        fac1, 
-        fac2,
-
     )
 
     # update with final h
@@ -114,13 +97,6 @@ function dopcor(
     xend, 
     hmax,
     h, 
-    nmax,
-    uround,
-    nstiff,
-    safe,
-    beta, 
-    fac1, 
-    fac2, 
 )
     ##### Initializations
 
@@ -157,9 +133,9 @@ function dopcor(
     e7  = coeffs[30]
 
     facold = 1e-4
-    expo1 = 0.20-beta*0.75
-    facc1 = 1.0/fac1
-    facc2 = 1.0/fac2
+    expo1 = 0.20-solver.options.beta*0.75
+    facc1 = 1.0/solver.options.step_size_selection_one
+    facc2 = 1.0/solver.options.step_size_selection_two
     posneg = sign(1.0, xend-solver.x)
 
     ###### Initial Preparations
@@ -193,13 +169,13 @@ function dopcor(
     ###### Basic Integration Step
     xph = 0.0 # need to put this here because FORTRAN seems to be looser with scoping
     while true
-        if nstep > nmax
+        if nstep > solver.options.maximum_allowed_steps
             # GOTO 78
-            println(" MORE THAN NMAX = ", nmax, " STEPS ARE NEEDED")
+            println(" MORE THAN NMAX = ", solver.options.maximum_allowed_steps, " STEPS ARE NEEDED")
             return h, DP5Report(solver.x, -2, 0, 0, 0, 0)
         end
         
-        if (0.10 * abs(h)) <= abs(solver.x)*uround 
+        if (0.10 * abs(h)) <= abs(solver.x)*solver.options.uround 
             # GOTO 77
             println("STEP SIZE TOO SMALL, H = ", h)
             return h, DP5Report(solver.x, -3, 0, 0, 0, 0)
@@ -250,16 +226,16 @@ function dopcor(
         ###### Computation of hnew
         fac11 = err^expo1
         ###### Lund-Stabilization
-        fac = fac11/(facold^beta)
+        fac = fac11/(facold^solver.options.beta)
         ###### we require fac1 <= hnew/h <= fac2
-        fac = max(facc2, min(facc1, fac/safe)) # facc1, facc2, fac must be Float64 
+        fac = max(facc2, min(facc1, fac/solver.options.safety_factor)) # facc1, facc2, fac must be Float64 
         hnew = h/fac
         if err <= 1.0 
             ###### Step is accepted
             facold = max(err, 1e-4)
             naccpt += 1
             ###### Stiffness Detection
-            if (mod(naccpt, nstiff) == 0) || (iasti > 0)
+            if (mod(naccpt, solver.options.stiffness_test_activation_step) == 0) || (iasti > 0)
                 stnum = 0.0
                 stden = 0.0
 
@@ -315,7 +291,7 @@ function dopcor(
             reject = false
         else
             ###### Step is rejected
-            hnew = h/min(facc1, fac11/safe)
+            hnew = h/min(facc1, fac11/solver.options.safety_factor)
             reject = true
             if naccpt > 1
                 nrejct += 1
