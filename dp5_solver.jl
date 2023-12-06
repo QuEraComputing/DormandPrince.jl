@@ -1,6 +1,6 @@
 using Base.Iterators:repeated
-include("dp5_types.jl")
-include("dp5_checks.jl")
+include("types.jl")
+include("checks.jl")
 #=
 interface will be integrate(solver, x_end)
 =#

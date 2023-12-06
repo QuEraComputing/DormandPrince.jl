@@ -40,7 +40,7 @@ end
 
 # integrate(solver, times) should return an iterator
 
-include("dp5_solver_interface.jl")
+include("dp5_solver.jl")
 
 mutable struct DP5Iterator{T <: Real}
     solver::DP5Solver
