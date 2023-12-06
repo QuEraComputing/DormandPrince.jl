@@ -24,8 +24,16 @@ end
     print_error_messages::Bool = true
     stiffness_test_activation_step::Int64 = 1000
 
+    # should be either vector or repeated for type
     atol::Union{T, Vector{T}} = 1e-10
     rtol::Union{T, Vector{T}} = 1e-10
+
+end
+
+struct DP5Consts 
+    expo1
+    facc1
+    facc2
 end
 
 # should "dopri5" take in DP5Solver or should DP5Solver have some associated method
@@ -45,6 +53,14 @@ mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
     ysti::StateType
     options::DP5Options
 
+    consts::DP5Consts
+
+    facold::Float64
+    iasti::Int64
+    nonsti::Int64
+    hlamb::Float64
+    last::Bool
+
     function DP5Solver(f::Function, x::T, y::StateType; kw...) where {StateType <: AbstractVector, T<:Real}
 
         k1 = copy(y)
@@ -57,7 +73,19 @@ mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
         ysti = copy(y)
         options = DP5Options(;kw...)
 
-        new{StateType, T}(f, x, options.initial_step_size, y, k1, k2, k3, k4, k5, k6, y1, ysti, options)
+        # calculate constants being used
+        facold = 1e-4
+        expo1 = 0.20-options.beta*0.75
+        facc1 = 1.0/options.step_size_selection_one
+        facc2 = 1.0/options.step_size_selection_two
+        consts = DP5Consts(expo1, facc1, facc2)
+
+        iasti = 0
+        nonsti = 0 
+        hlamb = 0.0
+        last = false
+
+        new{StateType, T}(f, x, options.initial_step_size, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, iasti, nonsti, hlamb, last)
     end
 end
 

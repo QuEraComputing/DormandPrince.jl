@@ -10,14 +10,12 @@ function dopri5(
 )
     arret = false
 
+    # check nmax, uround, safety factor, beta, safety_factor
+    arret = check_max_allowed_steps(solver.options.maximum_allowed_steps, solver.options.print_error_messages) ||
+            check_uround(solver.options.uround, solver.options.print_error_messages) ||
+            check_beta(solver.options.beta, solver.options.print_error_messages) ||
+            check_safety_factor(solver.options.safety_factor, solver.options.print_error_messages)
 
-    ###### nmax - maximal number of steps
-    if solver.options.maximum_allowed_steps < 0
-        if solver.options.print_error_messages
-            println("Maximum Allowed steps cannot be negative")
-        end
-        arret = true
-    end
 
     ###### nstiff -  parameters for stiffness detection
     # nstiff = solver_options.stiffness_test_activation_step
@@ -25,33 +23,6 @@ function dopri5(
     if solver.options.stiffness_test_activation_step < 0
         solver.options.stiffness_test_activation_step = solver.options.maximum_allowed_steps + 10
     end 
-
-    ###### uround - smallest number satisfying 1.0 + uround > 1.0
-
-    if (solver.options.uround <= 1e-35) || (solver.options.uround >= 1.0)
-        if solver.options.print_error_messages
-            println("WHICH MACHINE DO YOU HAVE? YOUR UROUND WAS:", solver.options.uround)
-        end
-        arret = true
-    end 
-
-    ####### safety factor
-    #safe = solver_options.safety_factor 
-    if (solver.options.safety_factor >= 1.0) || (solver.options.safety_factor <= 1e-4)
-        if solver.options.print_error_messages
-            println("CURIOUS INPUT FOR SAFETY FACTOR WORK[2]=", solver.options.safety_factor)
-        end
-        arret = true
-    end
-   
-    ###### beta - for step control stabilization
-
-    if solver.options.beta > 0.2
-        if solver.options.print_error_messages
-            println("CURIOUS INPUT FOR BETA: ", solver.options.beta)
-        end
-        arret = true
-    end
 
     ####### maximal step size
 
@@ -132,10 +103,6 @@ function dopcor(
     e6  = coeffs[29]
     e7  = coeffs[30]
 
-    facold = 1e-4
-    expo1 = 0.20-solver.options.beta*0.75
-    facc1 = 1.0/solver.options.step_size_selection_one
-    facc2 = 1.0/solver.options.step_size_selection_two
     posneg = sign(1.0, xend-solver.x)
 
     ###### Initial Preparations
@@ -149,11 +116,6 @@ function dopcor(
     atol_iter = atol isa Number ? repeated(atol) : atol
     rtol_iter = rtol isa Number ? repeated(rtol) : rtol
 
-    last = false
-    hlamb = 0.0
-    iasti = 0
-    nonsti = 0
-    # fcn(n, x, y, k1)
     solver.f(solver.x, solver.y, solver.k1)
     hmax = abs(hmax)
     iord = 5
@@ -183,7 +145,7 @@ function dopcor(
 
         if ((solver.x+1.01*h-xend)*posneg) > 0.0
             h = xend-solver.x
-            last = true
+            solver.last = true
         end
         
         nstep += 1
@@ -224,18 +186,18 @@ function dopcor(
         err = sqrt(err/length(solver.y))
 
         ###### Computation of hnew
-        fac11 = err^expo1
+        fac11 = err^solver.consts.expo1
         ###### Lund-Stabilization
-        fac = fac11/(facold^solver.options.beta)
+        fac = fac11/(solver.facold^solver.options.beta)
         ###### we require fac1 <= hnew/h <= fac2
-        fac = max(facc2, min(facc1, fac/solver.options.safety_factor)) # facc1, facc2, fac must be Float64 
+        fac = max(solver.consts.facc2, min(solver.consts.facc1, fac/solver.options.safety_factor)) # facc1, facc2, fac must be Float64 
         hnew = h/fac
         if err <= 1.0 
             ###### Step is accepted
-            facold = max(err, 1e-4)
+            solver.facold = max(err, 1e-4)
             naccpt += 1
             ###### Stiffness Detection
-            if (mod(naccpt, solver.options.stiffness_test_activation_step) == 0) || (iasti > 0)
+            if (mod(naccpt, solver.options.stiffness_test_activation_step) == 0) || (solver.iasti > 0)
                 stnum = 0.0
                 stden = 0.0
 
@@ -246,19 +208,21 @@ function dopcor(
                 end
 
                 if stden > 0.0
-                    hlamb = h*sqrt(stnum/stden)
+                    solver.hlamb = h*sqrt(stnum/stden)
+                else
+                    solver.hlamb = Inf
                 end
 
                 
-                if hlamb > 3.25
-                    iasti += 1
-                    if iasti == 15
+                if solver.hlamb > 3.25
+                    solver.iasti += 1
+                    if solver.iasti == 15
                         println("THE PROBLEM SEEMS TO BECOME STIFF AT X = ", x)    
                     end
                 else 
-                    nonsti += 1
-                    if nonsti == 6
-                        iasti = 0
+                    solver.nonsti += 1
+                    if solver.nonsti == 6
+                        solver.iasti = 0
                     end
                 end
             end
@@ -269,7 +233,7 @@ function dopcor(
             solver.x = xph
 
             ###### Normal Exit
-            if last 
+            if solver.last 
                 h = hnew
                 return h, DP5Report(
                     solver.x, 
@@ -291,12 +255,12 @@ function dopcor(
             reject = false
         else
             ###### Step is rejected
-            hnew = h/min(facc1, fac11/solver.options.safety_factor)
+            hnew = h/min(solver.consts.facc1, fac11/solver.options.safety_factor)
             reject = true
             if naccpt > 1
                 nrejct += 1
             end
-            last = false
+            solver.last = false
 
         end
         h = hnew

@@ -24,3 +24,12 @@ function check_beta(beta, print_error_messages)
         return false
     end
 end
+
+function check_safety_factor(safety_factor, print_error_messages)
+    if (safety_factor >= 1.0) || (safety_factor <= 1e-4)
+        print_error_messages ? println("Curious input for safety factor", safety_factor) : nothing
+        return true
+    else
+        return false
+    end
+end
