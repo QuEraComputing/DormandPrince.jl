@@ -1,7 +1,7 @@
+include("solver.jl")
+include("types.jl")
 using Bloqade
 using BloqadeExpr: Hamiltonian
-include("dp5_solver.jl")
-# include("dp5_types.jl")
 
 nsites = 1;
 atoms = generate_sites(ChainLattice(), nsites, scale = 5.74)
@@ -30,5 +30,5 @@ solver = DP5Solver(
     y
 )
 
-dopri5(solver, 4.1)
+dopri5(solver, 1.6)
 

@@ -1,3 +1,4 @@
+using Base.Iterators:repeated, Repeated
 
 struct DP5Report{T <: Real}
     x_final::T
@@ -30,10 +31,12 @@ end
 
 end
 
-struct DP5Consts 
+struct DP5Consts{T <: Real}
     expo1
     facc1
     facc2
+    atol_iter::Union{Repeated{T}, Vector{T}}
+    rtol_iter::Union{Repeated{T}, Vector{T}}
 end
 
 # should "dopri5" take in DP5Solver or should DP5Solver have some associated method
@@ -74,18 +77,20 @@ mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
         options = DP5Options(;kw...)
 
         # calculate constants being used
-        facold = 1e-4
         expo1 = 0.20-options.beta*0.75
         facc1 = 1.0/options.step_size_selection_one
         facc2 = 1.0/options.step_size_selection_two
-        consts = DP5Consts(expo1, facc1, facc2)
+        atol_iter = options.atol isa Number ? repeated(options.atol) : options.rtol
+        rtol_iter = options.rtol isa Number ? repeated(options.rtol) : options.rtol
+        consts = DP5Consts(expo1, facc1, facc2,atol_iter,rtol_iter)
 
+        facold = 1e-4
         iasti = 0
         nonsti = 0 
         hlamb = 0.0
         last = false
 
-        new{StateType, T}(f, x, options.initial_step_size, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, iasti, nonsti, hlamb, last)
+        new{StateType, T}(f, x, options.initial_step_size, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, facold, iasti, nonsti, hlamb, last)
     end
 end
 
