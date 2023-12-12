@@ -97,7 +97,7 @@ mutable struct DP5Solver{StateType <: AbstractVector, T <: Real, F}
         k6 = copy(y)
         y1 = copy(y)
         ysti = copy(y)
-        options = DP5Options(;kw...)
+        options = DP5Options{T}(;kw...)
 
         # calculate constants being used
         expo1 = 0.20-options.beta*0.75
