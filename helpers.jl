@@ -115,7 +115,8 @@ function stiffness_detection!(solver, naccpt, h)
         if solver.hlamb > 3.25
             solver.iasti += 1
             if solver.iasti == 15
-                println("THE PROBLEM SEEMS TO BECOME STIFF AT X = ", x)    
+                # turn this into a debug statement
+                @debug "The problem seems to become stiff at $x" 
             end
         else 
             solver.nonsti += 1

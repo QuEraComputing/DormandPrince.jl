@@ -16,10 +16,10 @@ function dopri5(
             check_beta(solver.options) ||
             check_safety_factor(solver.options)
     =#
-    check_max_allowed_steps(solver.options) && return DP5Report(solver.x, MAX_ALLOWED_STEPS_NEGATIVE, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
-    check_uround(solver.options) && return DP5Report(solver.x, UNSUPPORTED_UROUND, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
-    check_beta(solver.options) && return DP5Report(solver.x, CURIOUS_BETA, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
-    check_safety_factor(solver.options) && return DP5Report(solver.x, CURIOUS_SAFETY_FACTOR, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_max_allowed_steps(solver.options) || return DP5Report(solver.x, MAX_ALLOWED_STEPS_NEGATIVE, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_uround(solver.options) || return DP5Report(solver.x, UNSUPPORTED_UROUND, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_beta(solver.options) || return DP5Report(solver.x, CURIOUS_BETA, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_safety_factor(solver.options) || return DP5Report(solver.x, CURIOUS_SAFETY_FACTOR, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
 
     ###### nstiff -  parameters for stiffness detection
     # nstiff = solver_options.stiffness_test_activation_step
@@ -131,7 +131,7 @@ function dopcor(
             solver.facold = max(err, 1e-4)
             naccpt += 1
             ###### Stiffness Detection
-            # stiffness_detection!(solver, naccpt, h)
+            stiffness_detection!(solver, naccpt, h)
 
             solver.k1 .= solver.k2
             solver.y  .= solver.y1
