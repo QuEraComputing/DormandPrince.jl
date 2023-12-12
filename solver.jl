@@ -4,17 +4,22 @@ include("checks.jl")
 include("helpers.jl")
 
 function dopri5(
-   solver::DP5Solver,
+   solver,
    xend
 )
-    arret = false
 
     # check nmax, uround, safety factor, beta, safety_factor
-    arret = check_max_allowed_steps(solver.options.maximum_allowed_steps, solver.options.print_error_messages) ||
-            check_uround(solver.options.uround, solver.options.print_error_messages) ||
-            check_beta(solver.options.beta, solver.options.print_error_messages) ||
-            check_safety_factor(solver.options.safety_factor, solver.options.print_error_messages)
-
+    # just accept solver.options and handle accessing attributes internally
+    #=
+    arret = check_max_allowed_steps(solver.options) ||
+            check_uround(solver.options) ||
+            check_beta(solver.options) ||
+            check_safety_factor(solver.options)
+    =#
+    check_max_allowed_steps(solver.options) && return DP5Report(solver.x, MAX_ALLOWED_STEPS_NEGATIVE, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_uround(solver.options) && return DP5Report(solver.x, UNSUPPORTED_UROUND, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_beta(solver.options) && return DP5Report(solver.x, CURIOUS_BETA, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_safety_factor(solver.options) && return DP5Report(solver.x, CURIOUS_SAFETY_FACTOR, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
 
     ###### nstiff -  parameters for stiffness detection
     # nstiff = solver_options.stiffness_test_activation_step
@@ -24,11 +29,10 @@ function dopri5(
     end 
 
     ####### maximal step size
-
-    if solver.options.maximal_step_size == 0.0
-        hmax = xend-solver.x
+    hmax = if iszero(solver.options.maximal_step_size)
+        xend-solver.x
     else
-        hmax = solver.options.maximal_step_size
+        solver.options.maximal_step_size
     end
 
     ####### initial step size
@@ -42,11 +46,6 @@ function dopri5(
     y :D 
     =#
 
-
-    ####### When a fail has occured, return with idid = -1
-    if arret
-        return DP5REport(x, -1, 0, 0, 0, 0)
-    end
 
     h, dp5_report = dopcor(
         solver, # contains x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
@@ -69,8 +68,9 @@ function dopcor(
     h, 
 )
     ##### Initializations
-
-    posneg = sign(1.0, xend-solver.x)
+    # replace sign with Julia-native Base.sign
+    # posneg = sign(1.0, xend-solver.x)
+    posneg = 1.0 * Base.sign(xend-solver.x)
 
     ###### Initial Preparations
     nfcn   = 0
@@ -82,7 +82,8 @@ function dopcor(
     hmax = abs(hmax)
     iord = 5
 
-    if h == 0.0
+    # may be considered type unstable
+    if iszero(h)
         # solver contains, fcn, x, y, k1, k2, k3, atol, rtol
         h = hinit(solver, posneg, iord, hmax)
     end
@@ -94,14 +95,14 @@ function dopcor(
     while true
         if nstep > solver.options.maximum_allowed_steps
             # GOTO 78
-            println(" MORE THAN NMAX = ", solver.options.maximum_allowed_steps, " STEPS ARE NEEDED")
-            return h, DP5Report(solver.x, -2, 0, 0, 0, 0)
+            # println(" MORE THAN NMAX = ", solver.options.maximum_allowed_steps, " STEPS ARE NEEDED")
+            return h, DP5Report(solver.x, CHECKS_SUCCESSFUL, LARGER_NMAX_NEEDED , 0, 0, 0, 0)
         end
         
         if (0.10 * abs(h)) <= abs(solver.x)*solver.options.uround 
             # GOTO 77
-            println("STEP SIZE TOO SMALL, H = ", h)
-            return h, DP5Report(solver.x, -3, 0, 0, 0, 0)
+            # println("STEP SIZE TOO SMALL, H = ", h)
+            return h, DP5Report(solver.x, CHECKS_SUCCESSFUL, STEP_SIZE_BECOMES_TOO_SMALL, 0, 0, 0, 0)
         end
 
         if ((solver.x+1.01*h-xend)*posneg) > 0.0
@@ -130,7 +131,7 @@ function dopcor(
             solver.facold = max(err, 1e-4)
             naccpt += 1
             ###### Stiffness Detection
-            stiffness_detection!(solver, naccpt, h)
+            # stiffness_detection!(solver, naccpt, h)
 
             solver.k1 .= solver.k2
             solver.y  .= solver.y1
@@ -142,7 +143,8 @@ function dopcor(
                 h = hnew
                 return h, DP5Report(
                     solver.x, 
-                    1, 
+                    CHECKS_SUCCESSFUL,
+                    COMPUTATION_SUCCESSFUL, 
                     nfcn, 
                     nstep, 
                     naccpt, 
@@ -170,8 +172,6 @@ function dopcor(
         end
         h = hnew
     end
-
-
 
 end
 
@@ -210,6 +210,6 @@ function hinit(
         h1 = (0.01/der12)^(1.0/iord)
     end
     h = min(100*abs(h), h1, hmax)
-    return sign(h, posneg)
+    return h * Base.sign(posneg)
 
 end

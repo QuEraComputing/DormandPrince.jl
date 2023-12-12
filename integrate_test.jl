@@ -28,12 +28,12 @@ solver = DP5Solver(
 
 iterator = integrate(solver, [1.8, 1.9, 2.0])
 
-#=
+
 for (t, y) in iterator
     println(t)
     println(y)
 end
-=#
+
 
 #=
 function simple_callback(time, state)

@@ -9,7 +9,7 @@ function sign(a,b)
     return a*sign
 end
 
-function do_step!(solver::DP5Solver, h)
+function do_step!(solver, h)
 
     # define constants
     c2=0.2
@@ -68,7 +68,7 @@ function do_step!(solver::DP5Solver, h)
 
 end
 
-function error_estimation(solver::DP5Solver)
+function error_estimation(solver)
 
     err = mapreduce(+, solver.consts.atol_iter, solver.consts.rtol_iter, solver.k4, solver.y, solver.ysti) do atoli, rtoli, k4i, yi, ystii
         sk = atoli + rtoli*max(abs(yi), abs(ystii))
@@ -80,7 +80,7 @@ function error_estimation(solver::DP5Solver)
     return err 
 end
 
-function estimate_second_derivative(solver::DP5Solver, h)
+function estimate_second_derivative(solver, h)
         
     der2 = mapreduce(+, solver.consts.atol_iter, solver.consts.rtol_iter, solver.k2, solver.k1, solver.y) do atoli, rtoli, f1i, f0i, yi
         sk = atoli + rtoli*abs(yi)
@@ -95,13 +95,14 @@ end
 
 function stiffness_detection!(solver, naccpt, h)
     if (mod(naccpt, solver.options.stiffness_test_activation_step) == 0) || (solver.iasti > 0)
-        stnum = 0.0
-        stden = 0.0
+        #stnum = 0.0
+        #stden = 0.0
 
         stnum, stden = mapreduce(.+, solver.k2, solver.k6, solver.y1, solver.ysti) do k2i, k6i, y1i, ystii
-            stnum = abs(k2i-k6i)^2
-            stden = abs(y1i-ystii)^2
-            stnum, stden
+            #stnum = abs(k2i-k6i)^2 
+            #stden = abs(y1i-ystii)^2
+            abs(k2i-k6i)^2, abs(y1i-ystii)^2
+            # stnum, stden
         end
 
         if stden > 0.0
@@ -126,15 +127,10 @@ function stiffness_detection!(solver, naccpt, h)
 end
 
 function euler_first_guess(solver, hmax, posneg)
-    dnf = 0.0
-    dny = 0.0
-
 
     dnf, dny = mapreduce(.+, solver.consts.atol_iter, solver.consts.rtol_iter, solver.k1, solver.y) do atoli, rtoli, f0i, yi
         sk = atoli + rtoli*abs(yi)
-        dnf = abs(f0i/sk)^2
-        dny = abs(yi/sk)^2
-        dnf, dny
+        abs(f0i/sk)^2, abs(yi/sk)^2 # dnf, dny
     end
 
    
@@ -146,7 +142,7 @@ function euler_first_guess(solver, hmax, posneg)
         h = 0.01*sqrt(dny/dnf)
     end
     h = min(h, hmax)
-    h = sign(h, posneg)
+    h = h * Base.sign(posneg)
 
     return h, dnf
 end

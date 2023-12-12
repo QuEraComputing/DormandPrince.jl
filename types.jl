@@ -1,8 +1,24 @@
 using Base.Iterators:repeated, Repeated
 
+@enum Idid begin
+    COMPUTATION_SUCCESSFUL = 1
+    INPUT_NOT_CONSISTENT = -1 # use for check failures in the beginning of dopri5 call
+    LARGER_NMAX_NEEDED = -2
+    STEP_SIZE_BECOMES_TOO_SMALL = -3
+end
+
+@enum Checks begin
+    CHECKS_SUCCESSFUL
+    MAX_ALLOWED_STEPS_NEGATIVE
+    UNSUPPORTED_UROUND
+    CURIOUS_BETA 
+    CURIOUS_SAFETY_FACTOR
+end
+
 struct DP5Report{T <: Real}
     x_final::T
-    idid::Int64
+    checks::Checks
+    idid::Idid
 
     num_func_evals::Int64
     num_computed_steps::Int64
@@ -32,17 +48,17 @@ end
 end
 
 struct DP5Consts{T <: Real}
-    expo1
-    facc1
-    facc2
+    expo1::T
+    facc1::T
+    facc2::T
     atol_iter::Union{Repeated{T}, Vector{T}}
     rtol_iter::Union{Repeated{T}, Vector{T}}
 end
 
 # should "dopri5" take in DP5Solver or should DP5Solver have some associated method
 # attached to it? 
-mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
-    f::Function
+mutable struct DP5Solver{StateType <: AbstractVector, T <: Real, F}
+    f::F
     x::T
     current_h::T
     y::StateType
@@ -54,17 +70,24 @@ mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
     k6::StateType
     y1::StateType
     ysti::StateType
-    options::DP5Options
+    options::DP5Options{T}
 
-    consts::DP5Consts
+    consts::DP5Consts{T}
 
+    #=
     facold::Float64
     iasti::Int64
     nonsti::Int64
     hlamb::Float64
     last::Bool
+    =#
+    facold::T
+    iasti::Int64
+    nonsti::Int64
+    hlamb::T
+    last::Bool
 
-    function DP5Solver(f::Function, x::T, y::StateType; kw...) where {StateType <: AbstractVector, T<:Real}
+    function DP5Solver(f::F, x::T, y::StateType; kw...) where {StateType <: AbstractVector, T<:Real, F}
 
         k1 = copy(y)
         k2 = copy(y)
@@ -90,7 +113,7 @@ mutable struct DP5Solver{StateType <: AbstractVector, T <: Real}
         hlamb = 0.0
         last = false
 
-        new{StateType, T}(f, x, options.initial_step_size, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, facold, iasti, nonsti, hlamb, last)
+        new{StateType, T, F}(f, x, options.initial_step_size, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, facold, iasti, nonsti, hlamb, last)
     end
 end
 
