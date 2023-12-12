@@ -53,11 +53,29 @@ struct DP5Consts{T <: Real}
     facc2::T
     atol_iter::Union{Repeated{T}, Vector{T}}
     rtol_iter::Union{Repeated{T}, Vector{T}}
+
+    function DP5Consts(options::DP5Options{T}) where {T <: Real}
+        expo1 = 0.20-options.beta*0.75
+        facc1 = 1.0/options.step_size_selection_one
+        facc2 = 1.0/options.step_size_selection_two
+        atol_iter = options.atol isa Number ? repeated(options.atol) : options.rtol
+        rtol_iter = options.rtol isa Number ? repeated(options.rtol) : options.rtol
+        new{T}(expo1, facc1, facc2,atol_iter,rtol_iter)
+    end
+end
+
+
+@kwdef mutable struct DP5Vars{T<:Real}
+    facold::T = 1e-4
+    iasti::Int64 = 0
+    nonsti::Int64 = 0
+    hlamb::T = 0.0
+    last::Bool = false
 end
 
 # should "dopri5" take in DP5Solver or should DP5Solver have some associated method
 # attached to it? 
-mutable struct DP5Solver{StateType <: AbstractVector, T <: Real, F}
+struct DP5Solver{StateType <: AbstractVector, T <: Real, F}
     f::F
     x::T
     current_h::T
@@ -71,49 +89,24 @@ mutable struct DP5Solver{StateType <: AbstractVector, T <: Real, F}
     y1::StateType
     ysti::StateType
     options::DP5Options{T}
-
     consts::DP5Consts{T}
-
-    #=
-    facold::Float64
-    iasti::Int64
-    nonsti::Int64
-    hlamb::Float64
-    last::Bool
-    =#
-    facold::T
-    iasti::Int64
-    nonsti::Int64
-    hlamb::T
-    last::Bool
+    vars::DP5Vars{T}
 
     function DP5Solver(f::F, x::T, y::StateType; kw...) where {StateType <: AbstractVector, T<:Real, F}
 
-        k1 = copy(y)
-        k2 = copy(y)
-        k3 = copy(y)
-        k4 = copy(y)
-        k5 = copy(y)
-        k6 = copy(y)
-        y1 = copy(y)
-        ysti = copy(y)
+        k1 = empty(y)
+        k2 = empty(y)
+        k3 = empty(y)
+        k4 = empty(y)
+        k5 = empty(y)
+        k6 = empty(y)
+        y1 = empty(y)
+        ysti = empty(y)
         options = DP5Options(;kw...)
+        consts = DP5Consts(options)
+        vars = DP5Vars{T}()
 
-        # calculate constants being used
-        expo1 = 0.20-options.beta*0.75
-        facc1 = 1.0/options.step_size_selection_one
-        facc2 = 1.0/options.step_size_selection_two
-        atol_iter = options.atol isa Number ? repeated(options.atol) : options.rtol
-        rtol_iter = options.rtol isa Number ? repeated(options.rtol) : options.rtol
-        consts = DP5Consts(expo1, facc1, facc2,atol_iter,rtol_iter)
-
-        facold = 1e-4
-        iasti = 0
-        nonsti = 0 
-        hlamb = 0.0
-        last = false
-
-        new{StateType, T, F}(f, x, options.initial_step_size, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, facold, iasti, nonsti, hlamb, last)
+        new{StateType, T, F}(f, x, options.initial_step_size, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, vars)
     end
 end
 

@@ -94,7 +94,7 @@ function estimate_second_derivative(solver, h)
 end
 
 function stiffness_detection!(solver, naccpt, h)
-    if (mod(naccpt, solver.options.stiffness_test_activation_step) == 0) || (solver.iasti > 0)
+    if (mod(naccpt, solver.options.stiffness_test_activation_step) == 0) || (solver.vars.iasti > 0)
         #stnum = 0.0
         #stden = 0.0
 
@@ -106,22 +106,22 @@ function stiffness_detection!(solver, naccpt, h)
         end
 
         if stden > 0.0
-            solver.hlamb = h*sqrt(stnum/stden)
+            solver.vars.hlamb = h*sqrt(stnum/stden)
         else
-            solver.hlamb = Inf
+            solver.vars.hlamb = Inf
         end
 
         
-        if solver.hlamb > 3.25
-            solver.iasti += 1
-            if solver.iasti == 15
+        if solver.vars.hlamb > 3.25
+            solver.vars.iasti += 1
+            if solver.vars.iasti == 15
                 # turn this into a debug statement
                 @debug "The problem seems to become stiff at $x" 
             end
         else 
-            solver.nonsti += 1
-            if solver.nonsti == 6
-                solver.iasti = 0
+            solver.vars.nonsti += 1
+            if solver.vars.nonsti == 6
+                solver.vars.iasti = 0
             end
         end
     end

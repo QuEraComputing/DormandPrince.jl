@@ -107,7 +107,7 @@ function dopcor(
 
         if ((solver.x+1.01*h-xend)*posneg) > 0.0
             h = xend-solver.x
-            solver.last = true
+            solver.vars.last = true
         end
         
         nstep += 1
@@ -122,13 +122,13 @@ function dopcor(
         ###### Computation of hnew
         fac11 = err^solver.consts.expo1
         ###### Lund-Stabilization
-        fac = fac11/(solver.facold^solver.options.beta)
+        fac = fac11/(solver.vars.facold^solver.options.beta)
         ###### we require fac1 <= hnew/h <= fac2
         fac = max(solver.consts.facc2, min(solver.consts.facc1, fac/solver.options.safety_factor)) # facc1, facc2, fac must be Float64 
         hnew = h/fac
         if err <= 1.0 
             ###### Step is accepted
-            solver.facold = max(err, 1e-4)
+            solver.vars.facold = max(err, 1e-4)
             naccpt += 1
             ###### Stiffness Detection
             stiffness_detection!(solver, naccpt, h)
@@ -139,7 +139,7 @@ function dopcor(
             solver.x += h
 
             ###### Normal Exit
-            if solver.last 
+            if solver.vars.last 
                 h = hnew
                 return h, DP5Report(
                     solver.x, 
@@ -167,7 +167,7 @@ function dopcor(
             if naccpt > 1
                 nrejct += 1
             end
-            solver.last = false
+            solver.vars.last = false
 
         end
         h = hnew
