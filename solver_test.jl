@@ -37,5 +37,5 @@ dopri5(solver, 1.6)
 
 # narrow down to Dopcor
 ## dopcor(solver, xend, hmax, h)
-@report_opt dopcor(solver, 1.6, 1.6, 0.0)
+## @report_opt dopcor(solver, 1.6, 1.6, 0.0)
 
