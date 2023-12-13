@@ -46,19 +46,19 @@ function do_step!(solver, h)
     ####### First 6 stages, just set to equality and should work bc everything is vector (no need for loops)
     # 22
     solver.y1 .= solver.y .+ h .* a21 .* solver.k1
-    solver.f(solver.x + c2 * h, solver.y1, solver.k2)
+    solver.f(solver.vars.x + c2 * h, solver.y1, solver.k2)
     # 23
     solver.y1 .= solver.y .+ h .* (a31 .* solver.k1 .+ a32 .* solver.k2)
-    solver.f(solver.x + c3 * h, solver.y1, solver.k3)
+    solver.f(solver.vars.x + c3 * h, solver.y1, solver.k3)
     # 24
     solver.y1 .= solver.y .+ h .* (a41 .* solver.k1 .+ a42 .* solver.k2 .+ a43 .* solver.k3)
-    solver.f(solver.x + c4 * h, solver.y1, solver.k4)
+    solver.f(solver.vars.x + c4 * h, solver.y1, solver.k4)
     # 25
     solver.y1 .= solver.y .+ h .* (a51 .* solver.k1 .+ a52 .* solver.k2 .+ a53 .* solver.k3 .+ a54 .* solver.k4)
-    solver.f(solver.x + c5*h, solver.y1, solver.k5)
+    solver.f(solver.vars.x + c5*h, solver.y1, solver.k5)
     # 26
     solver.ysti .= solver.y .+ h .* (a61 .* solver.k1 .+ a62 .* solver.k2 .+ a63 .* solver.k3 .+ a64 .* solver.k4 .+ a65 .* solver.k5)
-    xph = solver.x + h
+    xph = solver.vars.x + h
     solver.f(xph, solver.ysti, solver.k6)
     # 27
     solver.y1 .= solver.y .+ h .* (a71 .* solver.k1 .+ a73 .* solver.k3 .+ a74 .* solver.k4 .+ a75 .* solver.k5 .+ a76 .* solver.k6)
@@ -94,7 +94,7 @@ function estimate_second_derivative(solver, h)
 end
 
 function stiffness_detection!(solver, naccpt, h)
-    if (mod(naccpt, solver.options.stiffness_test_activation_step) == 0) || (solver.iasti > 0)
+    if (mod(naccpt, solver.options.stiffness_test_activation_step) == 0) || (solver.vars.iasti > 0)
         #stnum = 0.0
         #stden = 0.0
 
@@ -106,22 +106,22 @@ function stiffness_detection!(solver, naccpt, h)
         end
 
         if stden > 0.0
-            solver.hlamb = h*sqrt(stnum/stden)
+            solver.vars.hlamb = h*sqrt(stnum/stden)
         else
-            solver.hlamb = Inf
+            solver.vars.hlamb = Inf
         end
 
         
-        if solver.hlamb > 3.25
-            solver.iasti += 1
-            if solver.iasti == 15
+        if solver.vars.hlamb > 3.25
+            solver.vars.iasti += 1
+            if solver.vars.iasti == 15
                 # turn this into a debug statement
                 @debug "The problem seems to become stiff at $x" 
             end
         else 
-            solver.nonsti += 1
-            if solver.nonsti == 6
-                solver.iasti = 0
+            solver.vars.nonsti += 1
+            if solver.vars.nonsti == 6
+                solver.vars.iasti = 0
             end
         end
     end
