@@ -6,7 +6,7 @@ function generate_clean_problem()
     h = rydberg_h(atoms; Ω = 20 * 2π, Δ = 0)
     reg = zero_state(1)
     
-    prob = SchrodingerProblem(reg, 1.6, h; algo=DP5())
+    prob = SchrodingerProblem(reg, 1.6, h; algo=DP8())
 
     return prob
 end
