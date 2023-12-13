@@ -37,8 +37,6 @@ end
 
 # invoke eq via eq(dstate, state, p, t::Number) 
 
-
-
 # trigger precompilation
 dopri5(generate_clean_solver(), 1.6)
 

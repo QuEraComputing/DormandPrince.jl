@@ -20,6 +20,9 @@ eq = SchrodingerEquation(h, Hamiltonian(T, h, space))
 # invoke eq via eq(dstate, state, p, t::Number) 
 
 function fcn(x, y, f)
+    #println(y)
+    #println(x)
+    #println(f)
     eq(f, y, nothing, x)
 end
 
