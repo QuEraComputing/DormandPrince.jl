@@ -48,19 +48,21 @@ end
 end
 
 struct DP5Consts{T <: Real}
+    x::T
+    h::T
     expo1::T
     facc1::T
     facc2::T
     atol_iter::Union{Repeated{T}, Vector{T}}
     rtol_iter::Union{Repeated{T}, Vector{T}}
 
-    function DP5Consts(options::DP5Options{T}) where {T <: Real}
+    function DP5Consts(x::T, options::DP5Options{T}) where {T <: Real}
         expo1 = 0.20-options.beta*0.75
         facc1 = 1.0/options.step_size_selection_one
         facc2 = 1.0/options.step_size_selection_two
         atol_iter = options.atol isa Number ? repeated(options.atol) : options.rtol
         rtol_iter = options.rtol isa Number ? repeated(options.rtol) : options.rtol
-        new{T}(expo1, facc1, facc2,atol_iter,rtol_iter)
+        new{T}(x, options.initial_step_size, expo1, facc1, facc2,atol_iter,rtol_iter)
     end
 end
 
@@ -77,8 +79,6 @@ end
 # attached to it? 
 struct DP5Solver{StateType <: AbstractVector, T <: Real, F}
     f::F
-    x::T
-    current_h::T
     y::StateType
     k1::StateType
     k2::StateType
@@ -103,10 +103,10 @@ struct DP5Solver{StateType <: AbstractVector, T <: Real, F}
         y1 = empty(y)
         ysti = empty(y)
         options = DP5Options(;kw...)
-        consts = DP5Consts(options)
+        consts = DP5Consts(x, options)
         vars = DP5Vars{T}()
 
-        new{StateType, T, F}(f, x, options.initial_step_size, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, vars)
+        new{StateType, T, F}(f, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, vars)
     end
 end
 

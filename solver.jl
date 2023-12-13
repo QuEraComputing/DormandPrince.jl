@@ -16,10 +16,10 @@ function dopri5(
             check_beta(solver.options) ||
             check_safety_factor(solver.options)
     =#
-    check_max_allowed_steps(solver.options) || return DP5Report(solver.x, MAX_ALLOWED_STEPS_NEGATIVE, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
-    check_uround(solver.options) || return DP5Report(solver.x, UNSUPPORTED_UROUND, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
-    check_beta(solver.options) || return DP5Report(solver.x, CURIOUS_BETA, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
-    check_safety_factor(solver.options) || return DP5Report(solver.x, CURIOUS_SAFETY_FACTOR, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_max_allowed_steps(solver.options) || return DP5Report(solver.vars.x, MAX_ALLOWED_STEPS_NEGATIVE, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_uround(solver.options) || return DP5Report(solver.vars.x, UNSUPPORTED_UROUND, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_beta(solver.options) || return DP5Report(solver.vars.x, CURIOUS_BETA, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_safety_factor(solver.options) || return DP5Report(solver.vars.x, CURIOUS_SAFETY_FACTOR, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
 
     ###### nstiff -  parameters for stiffness detection
     # nstiff = solver_options.stiffness_test_activation_step
@@ -30,14 +30,14 @@ function dopri5(
 
     ####### maximal step size
     hmax = if iszero(solver.options.maximal_step_size)
-        xend-solver.x
+        xend-solver.vars.x
     else
         solver.options.maximal_step_size
     end
 
     ####### initial step size
     #h = solver_options.initial_step_size
-    h = solver.current_h
+    h = solver.vars.h
 
     #=
     Total Storage Requirement check used to live here but
@@ -55,7 +55,7 @@ function dopri5(
     )
 
     # update with final h
-    solver.current_h = h
+    solver.vars.h = h
 
     return dp5_report
 
@@ -69,8 +69,8 @@ function dopcor(
 )
     ##### Initializations
     # replace sign with Julia-native Base.sign
-    # posneg = sign(1.0, xend-solver.x)
-    posneg = 1.0 * Base.sign(xend-solver.x)
+    # posneg = sign(1.0, xend-solver.vars.x)
+    posneg = 1.0 * Base.sign(xend-solver.vars.x)
 
     ###### Initial Preparations
     nfcn   = 0
@@ -78,7 +78,7 @@ function dopcor(
     naccpt = 0
     nrejct = 0
 
-    solver.f(solver.x, solver.y, solver.k1)
+    solver.f(solver.vars.x, solver.y, solver.k1)
     hmax = abs(hmax)
     iord = 5
 
@@ -96,17 +96,17 @@ function dopcor(
         if nstep > solver.options.maximum_allowed_steps
             # GOTO 78
             # println(" MORE THAN NMAX = ", solver.options.maximum_allowed_steps, " STEPS ARE NEEDED")
-            return h, DP5Report(solver.x, CHECKS_SUCCESSFUL, LARGER_NMAX_NEEDED , 0, 0, 0, 0)
+            return h, DP5Report(solver.vars.x, CHECKS_SUCCESSFUL, LARGER_NMAX_NEEDED , 0, 0, 0, 0)
         end
         
-        if (0.10 * abs(h)) <= abs(solver.x)*solver.options.uround 
+        if (0.10 * abs(h)) <= abs(solver.vars.x)*solver.options.uround 
             # GOTO 77
             # println("STEP SIZE TOO SMALL, H = ", h)
-            return h, DP5Report(solver.x, CHECKS_SUCCESSFUL, STEP_SIZE_BECOMES_TOO_SMALL, 0, 0, 0, 0)
+            return h, DP5Report(solver.vars.x, CHECKS_SUCCESSFUL, STEP_SIZE_BECOMES_TOO_SMALL, 0, 0, 0, 0)
         end
 
-        if ((solver.x+1.01*h-xend)*posneg) > 0.0
-            h = xend-solver.x
+        if ((solver.vars.x+1.01*h-xend)*posneg) > 0.0
+            h = xend-solver.vars.x
             solver.vars.last = true
         end
         
@@ -136,13 +136,13 @@ function dopcor(
             solver.k1 .= solver.k2
             solver.y  .= solver.y1
 
-            solver.x += h
+            solver.vars.x += h
 
             ###### Normal Exit
             if solver.vars.last 
                 h = hnew
                 return h, DP5Report(
-                    solver.x, 
+                    solver.vars.x, 
                     CHECKS_SUCCESSFUL,
                     COMPUTATION_SUCCESSFUL, 
                     nfcn, 
@@ -196,7 +196,7 @@ function hinit(
     #y1 = y + h*f0
     #fcn(n, x+h, y1, f1)
     copyto!(solver.y1, solver.y + h*solver.k1)
-    solver.f(solver.x + h, solver.k3, solver.k2)
+    solver.f(solver.vars.x + h, solver.k3, solver.k2)
 
     ###### Estimate the second derivative of the solution
     der2 = estimate_second_derivative(solver, h)
