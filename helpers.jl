@@ -45,26 +45,26 @@ function do_step!(solver, h)
 
     ####### First 6 stages, just set to equality and should work bc everything is vector (no need for loops)
     # 22
-    solver.y1 .= solver.y + h * a21 * solver.k1
+    solver.y1 .= solver.y .+ h .* a21 .* solver.k1
     solver.f(solver.x + c2 * h, solver.y1, solver.k2)
     # 23
-    solver.y1 .= solver.y + h * (a31 * solver.k1 + a32 * solver.k2)
+    solver.y1 .= solver.y .+ h .* (a31 .* solver.k1 .+ a32 .* solver.k2)
     solver.f(solver.x + c3 * h, solver.y1, solver.k3)
     # 24
-    solver.y1 .= solver.y + h * (a41 * solver.k1 + a42 * solver.k2 + a43 * solver.k3)
+    solver.y1 .= solver.y .+ h .* (a41 .* solver.k1 .+ a42 .* solver.k2 .+ a43 .* solver.k3)
     solver.f(solver.x + c4 * h, solver.y1, solver.k4)
     # 25
-    solver.y1 .= solver.y + h * (a51 * solver.k1 + a52 * solver.k2 + a53 * solver.k3 + a54 * solver.k4)
+    solver.y1 .= solver.y .+ h .* (a51 .* solver.k1 .+ a52 .* solver.k2 .+ a53 .* solver.k3 .+ a54 .* solver.k4)
     solver.f(solver.x + c5*h, solver.y1, solver.k5)
     # 26
-    solver.ysti .= solver.y + h * (a61 * solver.k1 + a62 * solver.k2 + a63 * solver.k3 + a64 * solver.k4 + a65 * solver.k5)
+    solver.ysti .= solver.y .+ h .* (a61 .* solver.k1 .+ a62 .* solver.k2 .+ a63 .* solver.k3 .+ a64 .* solver.k4 .+ a65 .* solver.k5)
     xph = solver.x + h
     solver.f(xph, solver.ysti, solver.k6)
     # 27
-    solver.y1 .= solver.y + h * (a71 * solver.k1 + a73 * solver.k3 + a74 * solver.k4 + a75 * solver.k5 + a76 * solver.k6)
+    solver.y1 .= solver.y .+ h .* (a71 .* solver.k1 .+ a73 .* solver.k3 .+ a74 .* solver.k4 .+ a75 .* solver.k5 .+ a76 .* solver.k6)
     solver.f(xph, solver.y1, solver.k2)
     # 28
-    solver.k4 .= h * (e1 * solver.k1 + e3 * solver.k3 + e4 * solver.k4 + e5 * solver.k5 + e6 * solver.k6 + e7 * solver.k2)
+    solver.k4 .= h .* (e1 .* solver.k1 .+ e3 .* solver.k3 .+ e4 .* solver.k4 .+ e5 .* solver.k5 .+ e6 .* solver.k6 .+ e7 .* solver.k2)
 
 end
 

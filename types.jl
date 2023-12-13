@@ -93,7 +93,6 @@ struct DP5Solver{StateType <: AbstractVector, T <: Real, F}
     vars::DP5Vars{T}
 
     function DP5Solver(f::F, x::T, y::StateType; kw...) where {StateType <: AbstractVector, T<:Real, F}
-
         k1 = empty(y)
         k2 = empty(y)
         k3 = empty(y)
