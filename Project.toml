@@ -1,6 +1,9 @@
+name = "DormandPrince"
+uuid = "5e45e72d-22b8-4dd0-9c8b-f96714864bcd"
+authors = ["John Long<johnzl@protonmail.ch>",]
+version = "0.1.0"
+
 [deps]
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
-Bloqade = "bd27d05e-4ce1-5e79-84dd-c5d7d508bbe1"
-DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
-JET = "c3a54625-cd67-489e-a8e7-0a5a0ff4e31b"
-OrdinaryDiffEq = "1dea7af3-3e70-54e6-95c3-0bf5283fa5ed"
+
+[compat]
+julia = "1.9"

@@ -1,4 +1,4 @@
-using Base.Iterators:repeated, Repeated
+# using Base.Iterators:repeated, Repeated
 
 @enum Idid begin
     COMPUTATION_SUCCESSFUL = 1
@@ -20,10 +20,10 @@ struct DP5Report{T <: Real}
     checks::Checks
     idid::Idid
 
-    num_func_evals::Int64
-    num_computed_steps::Int64
-    num_accepted_steps::Int64
-    num_rejected_steps::Int64
+    num_func_evals::Int
+    num_computed_steps::Int
+    num_accepted_steps::Int
+    num_rejected_steps::Int
 end
 
 @kwdef struct DP5Options{T <: Real}
@@ -37,9 +37,9 @@ end
     initial_step_size::T = 0.0
 
     # originally in iwork[1] - iwork[4]
-    maximum_allowed_steps::Int64 = 100000
+    maximum_allowed_steps::Int = 100000
     print_error_messages::Bool = true
-    stiffness_test_activation_step::Int64 = 1000
+    stiffness_test_activation_step::Int = 1000
 
     # should be either vector or repeated for type
     atol::Union{T, Vector{T}} = 1e-10
@@ -69,8 +69,8 @@ end
     x::T = zero(T)
     h::T = zero(T)
     facold::T = 1e-4
-    iasti::Int64 = 0
-    nonsti::Int64 = 0
+    iasti::Int = 0
+    nonsti::Int = 0
     hlamb::T = zero(T)
     last::Bool = false
 end

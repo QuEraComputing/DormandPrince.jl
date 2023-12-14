@@ -1,14 +1,3 @@
-# FORTRAN sign - returns the value of A with the sign of B
-function sign(a,b)
-    if b >= 0
-        sign = 1.0
-    else
-        sign = -1.0
-    end
-    
-    return a*sign
-end
-
 function do_step!(solver, h)
 
     # define constants
@@ -43,27 +32,27 @@ function do_step!(solver, h)
     e6=22.0/525.0
     e7=-1.0/40.0
 
-    ####### First 6 stages, just set to equality and should work bc everything is vector (no need for loops)
-    # 22
+    ####### First 6 stages
+
     solver.y1 .= solver.y .+ h .* a21 .* solver.k1
     solver.f(solver.vars.x + c2 * h, solver.y1, solver.k2)
-    # 23
+
     solver.y1 .= solver.y .+ h .* (a31 .* solver.k1 .+ a32 .* solver.k2)
     solver.f(solver.vars.x + c3 * h, solver.y1, solver.k3)
-    # 24
+
     solver.y1 .= solver.y .+ h .* (a41 .* solver.k1 .+ a42 .* solver.k2 .+ a43 .* solver.k3)
     solver.f(solver.vars.x + c4 * h, solver.y1, solver.k4)
-    # 25
+
     solver.y1 .= solver.y .+ h .* (a51 .* solver.k1 .+ a52 .* solver.k2 .+ a53 .* solver.k3 .+ a54 .* solver.k4)
     solver.f(solver.vars.x + c5*h, solver.y1, solver.k5)
-    # 26
+    
     solver.ysti .= solver.y .+ h .* (a61 .* solver.k1 .+ a62 .* solver.k2 .+ a63 .* solver.k3 .+ a64 .* solver.k4 .+ a65 .* solver.k5)
     xph = solver.vars.x + h
     solver.f(xph, solver.ysti, solver.k6)
-    # 27
+
     solver.y1 .= solver.y .+ h .* (a71 .* solver.k1 .+ a73 .* solver.k3 .+ a74 .* solver.k4 .+ a75 .* solver.k5 .+ a76 .* solver.k6)
     solver.f(xph, solver.y1, solver.k2)
-    # 28
+
     solver.k4 .= h .* (e1 .* solver.k1 .+ e3 .* solver.k3 .+ e4 .* solver.k4 .+ e5 .* solver.k5 .+ e6 .* solver.k6 .+ e7 .* solver.k2)
 
 end
@@ -115,7 +104,6 @@ function stiffness_detection!(solver, naccpt, h)
         if solver.vars.hlamb > 3.25
             solver.vars.iasti += 1
             if solver.vars.iasti == 15
-                # turn this into a debug statement
                 @debug "The problem seems to become stiff at $x" 
             end
         else 
@@ -134,9 +122,7 @@ function euler_first_guess(solver, hmax, posneg)
         abs(f0i/sk)^2, abs(yi/sk)^2 # dnf, dny
     end
 
-   
-    # problem with comparing ComplexF64 with Float64
-    # take abs of dnf 
+
     if (dnf <= 1.0e-10) || (dny <= 1.0e-10)
         h = 1.0e-6
     else

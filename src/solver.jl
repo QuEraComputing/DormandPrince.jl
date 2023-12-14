@@ -1,7 +1,7 @@
-using Base.Iterators:repeated
-include("types.jl")
-include("checks.jl")
-include("helpers.jl")
+# using Base.Iterators:repeated
+#include("types.jl")
+#include("checks.jl")
+#include("helpers.jl")
 
 function dopri5(
    solver,
@@ -56,6 +56,9 @@ function dopri5(
 
     # update with final h
     solver.vars.h = h
+
+    # reset the necessary vars 
+    solver.vars.last = false
 
     return dp5_report
 
@@ -195,7 +198,8 @@ function hinit(
     ###### Perform an explicit step
     #y1 = y + h*f0
     #fcn(n, x+h, y1, f1)
-    copyto!(solver.y1, solver.y + h*solver.k1)
+    # copyto!(solver.y1, solver.y + h*solver.k1)
+    solver.y1 .= solver.y .+ h .*solver.k1
     solver.f(solver.vars.x + h, solver.k3, solver.k2)
 
     ###### Estimate the second derivative of the solution
