@@ -1,4 +1,11 @@
-.vscode/
-.CondaPkg/
+/.vscode
+**/**/**.cov
+
+/Manifest.toml
+/docs/build/
+/docs/Manifest.toml
+/docs/src/assets/main.css
+/docs/src/assets/indigo.css
+
 .DS_Store
-Manifest.toml
+.CondaPkg

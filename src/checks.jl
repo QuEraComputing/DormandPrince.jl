@@ -1,4 +1,4 @@
-include("types.jl")
+# include("types.jl")
 
 # make enums for every error type and return that instead of printing errors
 function check_max_allowed_steps(options::DP5Options{T}) where T
