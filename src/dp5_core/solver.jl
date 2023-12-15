@@ -94,18 +94,23 @@ function dopcor(
     nfcn += 2
     reject = false
     
+    idid = LARGER_NMAX_NEEDED
+
     ###### Basic Integration Step
-    while true
-        if nstep > solver.options.maximum_allowed_steps
-            # GOTO 78
-            # println(" MORE THAN NMAX = ", solver.options.maximum_allowed_steps, " STEPS ARE NEEDED")
-            return h, DP5Report(solver.vars.x, CHECKS_SUCCESSFUL, LARGER_NMAX_NEEDED , 0, 0, 0, 0)
-        end
+    for _ in 1:solver.options.maximum_allowed_steps
+        # if nstep > solver.options.maximum_allowed_steps
+        #     # GOTO 78
+        #     # println(" MORE THAN NMAX = ", solver.options.maximum_allowed_steps, " STEPS ARE NEEDED")
+        #     return h, DP5Report(solver.vars.x, INPUT_CHECKS_SUCCESSFUL, LARGER_NMAX_NEEDED , 0, 0, 0, 0)
+        # end
         
         if (0.10 * abs(h)) <= abs(solver.vars.x)*solver.options.uround 
             # GOTO 77
             # println("STEP SIZE TOO SMALL, H = ", h)
-            return h, DP5Report(solver.vars.x, CHECKS_SUCCESSFUL, STEP_SIZE_BECOMES_TOO_SMALL, 0, 0, 0, 0)
+            # return h, DP5Report(solver.vars.x, INPUT_CHECKS_SUCCESSFUL, STEP_SIZE_BECOMES_TOO_SMALL, 0, 0, 0, 0)
+
+            idid = STEP_SIZE_BECOMES_TOO_SMALL
+            break
         end
 
         if ((solver.vars.x+1.01*h-xend)*posneg) > 0.0
@@ -144,15 +149,17 @@ function dopcor(
             ###### Normal Exit
             if solver.vars.last 
                 h = hnew
-                return h, DP5Report(
-                    solver.vars.x, 
-                    CHECKS_SUCCESSFUL,
-                    COMPUTATION_SUCCESSFUL, 
-                    nfcn, 
-                    nstep, 
-                    naccpt, 
-                    nrejct
-                )
+                idid = COMPUTATION_SUCCESSFUL
+                break
+                # return h, DP5Report(
+                #     solver.vars.x, 
+                #     INPUT_CHECKS_SUCCESSFUL,
+                #     COMPUTATION_SUCCESSFUL, 
+                #     nfcn, 
+                #     nstep, 
+                #     naccpt, 
+                #     nrejct
+                # )
             end
 
             if(abs(hnew) > hmax)
@@ -176,6 +183,16 @@ function dopcor(
         h = hnew
     end
 
+    return h, DP5Report(
+        solver.vars.x, 
+        INPUT_CHECKS_SUCCESSFUL,
+        idid, 
+        nfcn, 
+        nstep, 
+        naccpt, 
+        nrejct
+    )
+    
 end
 
 function hinit(

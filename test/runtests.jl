@@ -1,6 +1,7 @@
 using Test
 using LinearAlgebra
 using DormandPrince: DP5Solver, dopri5, integrate
+# test error paths of dopcor, bypass checks if necessary 
 
 include("exact_evol_helpers.jl")
 
@@ -20,7 +21,7 @@ end
         ComplexF64[1.0, 0.0]
     )
 
-    dopri5(solver, 2π)
+    integrate(solver, 2π)
 
     @test solver.y ≈ solution(2π)
 end

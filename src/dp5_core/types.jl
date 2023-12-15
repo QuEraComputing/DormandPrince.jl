@@ -8,7 +8,7 @@
 end
 
 @enum Checks begin
-    CHECKS_SUCCESSFUL
+    INPUT_CHECKS_SUCCESSFUL
     MAX_ALLOWED_STEPS_NEGATIVE
     UNSUPPORTED_UROUND
     CURIOUS_BETA 
@@ -92,15 +92,21 @@ struct DP5Solver{StateType <: AbstractVector, T <: Real, F}
     consts::DP5Consts{T}
     vars::DP5Vars{T}
 
-    function DP5Solver(f::F, x::T, y::StateType; kw...) where {StateType <: AbstractVector, T<:Real, F}
-        k1 = copy(y)
-        k2 = copy(y)
-        k3 = copy(y)
-        k4 = copy(y)
-        k5 = copy(y)
-        k6 = copy(y)
-        y1 = copy(y)
-        ysti = copy(y)
+    function DP5Solver(
+        f::F, 
+        x::T, 
+        y::StateType,
+        k1::StateType,
+        k2::StateType,
+        k3::StateType,
+        k4::StateType,
+        k5::StateType,
+        k6::StateType,
+        y1::StateType,
+        ysti::StateType; kw...) where {StateType <: AbstractVector, T<:Real, F}
+
+        #TODO: check if y, k1, k2, k3, k4, k5, k6, y1, ysti have the same length
+
         options = DP5Options{T}(;kw...)
         consts = DP5Consts(options)
         vars = DP5Vars{T}(;x=x, h=options.initial_step_size)
@@ -109,16 +115,17 @@ struct DP5Solver{StateType <: AbstractVector, T <: Real, F}
     end
 end
 
-
-# DP5Options() = DP5Options(
-#     2.3e-16, #uround
-#     0.9,     # safety_factor
-#     0.2,     # step_size_selection_one
-#     10.0,    # step_size_selection_two
-#     0.04,    # beta
-#     0.0,     # maximal step size - default to 0.0, later set to xend - x
-#     0.0,     # initial step size - default to 0.0, trigger hinit later
-#     100000,  # maximum number of allowed steps 
-#     true,    # whether or not error messages should be printed
-#     1000 # stiffness test activated after step J * this number
-# )
+function DP5Solver(
+    f::F, 
+    x::T, 
+    y::StateType; kw...) where {StateType <: AbstractVector, T<:Real, F}
+    k1 = copy(y)
+    k2 = copy(y)
+    k3 = copy(y)
+    k4 = copy(y)
+    k5 = copy(y)
+    k6 = copy(y)
+    y1 = copy(y)
+    ysti = copy(y)
+    DP5Solver(f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti;kw...)
+end
