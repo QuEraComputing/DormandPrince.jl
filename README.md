@@ -1,5 +1,7 @@
 # DormandPrince.jl
 
+[![codecov](https://codecov.io/github/QuEraComputing/DormandPrince.jl/graph/badge.svg?token=qYZ4V7m0JY)](https://codecov.io/github/QuEraComputing/DormandPrince.jl)
+
 Julia-native implementation of the Dormand-Prince 5th order solver
 
 ## Installation
