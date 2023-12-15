@@ -1,4 +1,4 @@
-# DormandPrince
+# DormandPrince.jl
 
 Julia-native implementation of the Dormand-Prince 5th order solver
 
