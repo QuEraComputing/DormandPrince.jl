@@ -1,3 +1,5 @@
+using DormandPrince.DP5Core: DP5Solver, dopri5
+
 mutable struct DP5Iterator{T <: Real}
     solver::DP5Solver
     times::AbstractVector{T}
