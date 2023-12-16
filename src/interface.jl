@@ -13,7 +13,7 @@ function Base.iterate(dp5_iterator::DP5Iterator)
     # integrate to first time
     integrate(dp5_iterator.solver, first(dp5_iterator.times))
     # return value and index which is the state
-    return (dp5_iterator.times[dp5_iterator.index], dp5_iterator.solver.y), 2    
+    return (dp5_iterator.times[1], dp5_iterator.solver.y), 2    
 end
 
 # gets the next (t,y), return index+! which is the updated state
