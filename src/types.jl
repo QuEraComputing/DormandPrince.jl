@@ -144,8 +144,11 @@ struct DP8Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
     k4::StateType
     k5::StateType
     k6::StateType
+    k7::StateType
+    k8::StateType
+    k9::StateType
+    k10::StateType
     y1::StateType
-    ysti::StateType
     options::Options{T}
     consts::Consts{T}
     vars::Vars{T}
