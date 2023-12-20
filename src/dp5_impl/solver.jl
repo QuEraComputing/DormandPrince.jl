@@ -3,10 +3,10 @@
 #include("checks.jl")
 #include("helpers.jl")
 
-function dp5_integrate(
-   solver,
-   xend
-)
+function  core_integrator(
+   solver::DP5Solver{T},
+   xend::T
+) where {T <: Real}
 
     # check nmax, uround, safety factor, beta, safety_factor
     # just accept solver.options and handle accessing attributes internally
