@@ -96,12 +96,52 @@ end
 
 function error_estimation(solver)
 
-    err = mapreduce(+, solver.consts.atol_iter, solver.consts.rtol_iter, solver.k4, solver.y, solver.ysti) do atoli, rtoli, k4i, yi, ystii
-        sk = atoli + rtoli*max(abs(yi), abs(ystii))
-        abs(k4i/sk)^2
+    err, err2 = mapreduce(+, 
+        solver.consts.atol_iter, 
+        solver.consts.rtol_iter, 
+        solver.y,
+        solver.k1,
+        solver.k3,
+        solver.k4,
+        solver.k5,
+        solver.k6,
+        solver.k7,
+        solver.k8,
+        solver.k9,
+        solver.k10,
+    ) do atoli, rtoli, yi, k1i, k2i, k3i, k4i, k5i, k6i, k7i, k8i, k9i, k10i
+
+        #     DO 42 I=1,N 
+        #     SK=ATOL(I)+RTOL(I)*MAX(ABS(Y(I)),ABS(K5(I)))
+        #     ERRI=K4(I)-BHH1*K1(I)-BHH2*K9(I)-BHH3*K3(I)
+        #     ERR2=ERR2+(ERRI/SK)**2
+        #     ERRI=ER1*K1(I)+ER6*K6(I)+ER7*K7(I)+ER8*K8(I)+ER9*K9(I)
+        # &      +ER10*K10(I)+ER11*K2(I)+ER12*K3(I)
+        # 42    ERR=ERR+(ERRI/SK)**2
+
+        sk = atoli + rtoli*max(abs(yi), abs(k5i))
+        erri = k4i - bhh1*k1i - bhh2*k9i - bhh3*k3i
+        err2 = (abs(erri)/sk)^2
+
+        erri = er1*k1i + er6*k6i + er7*k7i + er8*k8i + er9*k9i + er10*k10i + er11*k2i + er12*k3i
+        err = (abs(erri)/sk)^2
+
+        (err, err2)
+
     end
 
-    err = sqrt(err/length(solver.y))
+    # DENO=ERR+0.01D0*ERR2
+    # IF (DENO.LE.0.D0) DENO=1.D0
+    # ERR=ABS(H)*ERR*SQRT(1.D0/(N*DENO))
+
+    den0 = err + 0.01*err2
+    den0 = if den0 <= 0.0
+        1.0
+    else
+        den0
+    end
+
+    err = abs(solver.vars.h)*err*sqrt(1.0/(length(solver.y) * den0))
 
     return err 
 end
