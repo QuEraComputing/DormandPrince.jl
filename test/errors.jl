@@ -1,7 +1,7 @@
 using Test
-using DormandPrince.DP5Core:
+using DormandPrince.DP5Impl:
     DP5Solver,
-    DP5Options,
+    Options,
     LARGER_NMAX_NEEDED,
     STEP_SIZE_BECOMES_TOO_SMALL,
     dopcor
