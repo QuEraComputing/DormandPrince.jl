@@ -132,3 +132,75 @@ function DP5Solver(
     DP5Solver(f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti;kw...)
 end
 
+
+# should " core_integrator" take in DP5Solver or should DP5Solver have some associated method
+# attached to it? 
+struct DP8Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
+    f::F
+    y::StateType
+    k1::StateType
+    k2::StateType
+    k3::StateType
+    k4::StateType
+    k5::StateType
+    k6::StateType
+    y1::StateType
+    ysti::StateType
+    options::Options{T}
+    consts::Consts{T}
+    vars::Vars{T}
+
+    function DP8Solver(
+        f::F, 
+        x::T, 
+        y::StateType,
+        k1::StateType,
+        k2::StateType,
+        k3::StateType,
+        k4::StateType,
+        k5::StateType,
+        k6::StateType,
+        k7::StateType,
+        k8::StateType,
+        k9::StateType,
+        k10::StateType,
+        y1::StateType; 
+        # overwrite default options with explicit kw
+        beta::T = 0.0,
+        step_size_selection_one::T = 0.333,
+        step_size_selection_two::T = 6.0,
+        kw...) where {T <: Real, StateType <: AbstractVector, F}
+
+        #TODO: check if y, k1, k2, k3, k4, k5, k6, y1, ysti have the same length
+
+        options = Options{T}(;
+            beta=beta, 
+            step_size_selection_one=step_size_selection_one, 
+            step_size_selection_two=step_size_selection_two. 
+            kw...
+        )
+        consts = Consts(options)
+        vars = Vars{T}(;x=x, h=options.initial_step_size)
+
+        new{T, StateType, F}(f, y, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, y1, options, consts, vars)
+    end
+end
+
+function DP8Solver(
+    f, 
+    x::Real, 
+    y::AbstractVector; kw...)
+    k1 = copy(y)
+    k2 = copy(y)
+    k3 = copy(y)
+    k4 = copy(y)
+    k5 = copy(y)
+    k6 = copy(y)
+    k7 = copy(y)
+    k8 = copy(y)
+    k9 = copy(y)
+    k10 = copy(y)
+    y1 = copy(y)
+    DP8Solver(f, x, y, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, y1;kw...)
+end
+
