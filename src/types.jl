@@ -179,7 +179,7 @@ struct DP8Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
         options = Options{T}(;
             beta=beta, 
             step_size_selection_one=step_size_selection_one, 
-            step_size_selection_two=step_size_selection_two. 
+            step_size_selection_two=step_size_selection_two, 
             kw...
         )
         consts = Consts(options)
