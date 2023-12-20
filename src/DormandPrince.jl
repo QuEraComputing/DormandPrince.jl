@@ -1,9 +1,14 @@
 module DormandPrince
 
+using Base.Iterators:repeated, Repeated
 
 # internal imports
-include("dp5_core/mod.jl")
+include("types.jl")
 include("interface.jl")
+include("dp5/mod.jl")
+
+
+using DormandPrince. DP5: core_integrator
 
 # export Interface
 export DP5Solver, integrate
