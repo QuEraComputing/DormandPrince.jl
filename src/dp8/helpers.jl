@@ -1,7 +1,6 @@
 function do_step!(solver, h)
 
-
-    ####### First 6 stages
+    ####### The 12 stages
     # DO 22 I=1,N 
     # 22  Y1(I)=Y(I)+H*A21*K1(I)  
     #     CALL FCN(N,X+C2*H,Y1,K2,RPAR,IPAR)
