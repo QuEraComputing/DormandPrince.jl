@@ -3,7 +3,7 @@ abstract type AbstractDPSolver{T <: Real, StateType <: AbstractVector, F} end
 
 @enum Idid begin
     COMPUTATION_SUCCESSFUL = 1
-    INPUT_NOT_CONSISTENT = -1 # use for check failures in the beginning of dp5_integrate call
+    INPUT_NOT_CONSISTENT = -1 # use for check failures in the beginning of  core_integrator call
     LARGER_NMAX_NEEDED = -2
     STEP_SIZE_BECOMES_TOO_SMALL = -3
 end
@@ -77,7 +77,7 @@ end
 end
 
 
-# should "dp5_integrate" take in DP5Solver or should DP5Solver have some associated method
+# should " core_integrator" take in DP5Solver or should DP5Solver have some associated method
 # attached to it? 
 struct DP5Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
     f::F
