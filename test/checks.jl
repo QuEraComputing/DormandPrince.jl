@@ -1,5 +1,5 @@
 using Test
-using DormandPrince.DP5Impl:
+using DormandPrince. DP5:
     Options,
     check_max_allowed_steps,
     check_uround,

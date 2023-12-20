@@ -5,7 +5,7 @@ using DormandPrince:
     LARGER_NMAX_NEEDED,
     STEP_SIZE_BECOMES_TOO_SMALL
     
-using DormandPrince.DP5Impl: dopcor
+using DormandPrince. DP5: dopcor
 
 function fcn(x, y, f) 
     f[1] = y[1]^2 - y[1]^3

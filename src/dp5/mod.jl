@@ -1,4 +1,4 @@
-module DP5Impl
+module  DP5
 
 using ..DormandPrince: DormandPrince, DP5Solver, Vars, Consts, Options, Report
 
