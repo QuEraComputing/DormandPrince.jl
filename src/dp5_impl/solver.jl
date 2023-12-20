@@ -16,10 +16,10 @@ function dp5_integrate(
             check_beta(solver.options) ||
             check_safety_factor(solver.options)
     =#
-    check_max_allowed_steps(solver.options) || return Report(solver.vars.x, MAX_ALLOWED_STEPS_NEGATIVE, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
-    check_uround(solver.options) || return Report(solver.vars.x, UNSUPPORTED_UROUND, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
-    check_beta(solver.options) || return Report(solver.vars.x, CURIOUS_BETA, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
-    check_safety_factor(solver.options) || return Report(solver.vars.x, CURIOUS_SAFETY_FACTOR, INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_max_allowed_steps(solver.options) || return Report(solver.vars.x, DormandPrince.MAX_ALLOWED_STEPS_NEGATIVE, DormandPrince.INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_uround(solver.options) || return Report(solver.vars.x, DormandPrince.UNSUPPORTED_UROUND, DormandPrince.INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_beta(solver.options) || return Report(solver.vars.x, DormandPrince.CURIOUS_BETA, DormandPrince.INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+    check_safety_factor(solver.options) || return Report(solver.vars.x, DormandPrince.CURIOUS_SAFETY_FACTOR, DormandPrince.INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
 
     ###### nstiff -  parameters for stiffness detection
     # nstiff = solver_options.stiffness_test_activation_step
@@ -94,22 +94,22 @@ function dopcor(
     nfcn += 2
     reject = false
     
-    idid = LARGER_NMAX_NEEDED
+    idid = DormandPrince.LARGER_NMAX_NEEDED
 
     ###### Basic Integration Step
     for _ in 1:solver.options.maximum_allowed_steps
         # if nstep > solver.options.maximum_allowed_steps
         #     # GOTO 78
         #     # println(" MORE THAN NMAX = ", solver.options.maximum_allowed_steps, " STEPS ARE NEEDED")
-        #     return h, Report(solver.vars.x, INPUT_CHECKS_SUCCESSFUL, LARGER_NMAX_NEEDED , 0, 0, 0, 0)
+        #     return h, Report(solver.vars.x, DormandPrince.INPUT_CHECKS_SUCCESSFUL, DormandPrince.LARGER_NMAX_NEEDED , 0, 0, 0, 0)
         # end
         
         if (0.10 * abs(h)) <= abs(solver.vars.x)*solver.options.uround 
             # GOTO 77
             # println("STEP SIZE TOO SMALL, H = ", h)
-            # return h, Report(solver.vars.x, INPUT_CHECKS_SUCCESSFUL, STEP_SIZE_BECOMES_TOO_SMALL, 0, 0, 0, 0)
+            # return h, Report(solver.vars.x, DormandPrince.INPUT_CHECKS_SUCCESSFUL, DormandPrince.STEP_SIZE_BECOMES_TOO_SMALL, 0, 0, 0, 0)
 
-            idid = STEP_SIZE_BECOMES_TOO_SMALL
+            idid = DormandPrince.STEP_SIZE_BECOMES_TOO_SMALL
             break
         end
 
@@ -149,12 +149,12 @@ function dopcor(
             ###### Normal Exit
             if solver.vars.last 
                 h = hnew
-                idid = COMPUTATION_SUCCESSFUL
+                idid = DormandPrince.COMPUTATION_SUCCESSFUL
                 break
                 # return h, Report(
                 #     solver.vars.x, 
-                #     INPUT_CHECKS_SUCCESSFUL,
-                #     COMPUTATION_SUCCESSFUL, 
+                #     DormandPrince.INPUT_CHECKS_SUCCESSFUL,
+                #     DormandPrince.COMPUTATION_SUCCESSFUL, 
                 #     nfcn, 
                 #     nstep, 
                 #     naccpt, 
@@ -185,7 +185,7 @@ function dopcor(
 
     return h, Report(
         solver.vars.x, 
-        INPUT_CHECKS_SUCCESSFUL,
+        DormandPrince.INPUT_CHECKS_SUCCESSFUL,
         idid, 
         nfcn, 
         nstep, 

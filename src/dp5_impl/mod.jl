@@ -1,8 +1,7 @@
 module DP5Impl
 
+using ..DormandPrince: DormandPrince, DP5Solver, Vars, Consts, Options, Report
 # external imports
-using DormandPrince: DP5Solver, Consts, Options, Vars, Report, Idid, Checks
-
 
 include("helpers.jl")
 include("checks.jl")

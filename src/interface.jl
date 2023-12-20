@@ -29,11 +29,10 @@ end
 # 2. integrate(solver, times) -> iterator
 # 3. integrate(callback, solver, times) -> vector of states with callback applied
 
-integrate(solver::AbstractDPSolver, time::Real) = dp5_integrate(solver, time) 
-integrate(solver::AbstractDPSolver, times::AbstractVector{T}) where {T <: Real} = DP5Iterator(solver, times)
+integrate(solver::AbstractDPSolver{T}, time::T) where {T<:Real} = dp5_integrate(solver, time) 
+integrate(solver::AbstractDPSolver{T}, times::AbstractVector{T}) where {T <: Real} = DP5Iterator(solver, times)
 
-
-function integrate(callback, solver::AbstractDPSolver{StateVec, T}, times::AbstractVector{T}; sort_times::Bool = true) where {StateVec <: AbstractVector, T <: Real}
+function integrate(callback, solver::AbstractDPSolver{T}, times::AbstractVector{T}; sort_times::Bool = true) where {T <: Real}
     times = sort_times ? sort(collect(times)) : times
 
     result = []
