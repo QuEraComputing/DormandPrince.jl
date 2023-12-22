@@ -4,7 +4,7 @@
 #include("helpers.jl")
 
 function  core_integrator(
-   solver::DP5Solver{T},
+   solver::DP8Solver{T},
    xend::T
 ) where {T <: Real}
 
@@ -47,7 +47,7 @@ function  core_integrator(
     =#
 
 
-    h, dp5_report = dopcor(
+    h, report = dopcor(
         solver, # contains x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
         xend, 
         hmax, 
@@ -60,7 +60,7 @@ function  core_integrator(
     # reset the necessary vars 
     solver.vars.last = false
 
-    return dp5_report
+    return report
 
 end
 
@@ -69,7 +69,7 @@ function dopcor(
     xend, 
     hmax,
     h, 
-)
+) where T
     ##### Initializations
     # replace sign with Julia-native Base.sign
     # posneg = sign(1.0, xend-solver.vars.x)
@@ -122,7 +122,7 @@ function dopcor(
 
         do_step!(solver, h)
 
-        nfcn += 6
+        nfcn += 11
 
         ###### Error Estimation
         err = error_estimation(solver)
@@ -142,6 +142,8 @@ function dopcor(
             # TODO: enable / disable with Preferences.jl
             xph = solver.vars.x + h
             solver.f(xph, solver.k5, solver.k4)
+            nfcn += 1
+            
             stiffness_detection!(solver, naccpt, h)
 
             solver.k1 .= solver.k4

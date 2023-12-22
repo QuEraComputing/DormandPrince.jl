@@ -47,7 +47,7 @@ function  core_integrator(
     =#
 
 
-    h, dp5_report = dopcor(
+    h, report = dopcor(
         solver, # contains x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
         xend, 
         hmax, 
@@ -60,7 +60,7 @@ function  core_integrator(
     # reset the necessary vars 
     solver.vars.last = false
 
-    return dp5_report
+    return report
 
 end
 

@@ -8,6 +8,7 @@ include("hinit.jl")
 include("checks.jl")
 include("interface.jl")
 include("dp5/mod.jl")
+include("dp8/mod.jl")
 
 
 using DormandPrince. DP5: core_integrator
