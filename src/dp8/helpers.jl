@@ -1,4 +1,4 @@
-function do_step!(solver, h)
+function do_step!(solver::DP8Solver{T}, h::T) where T
 
     ####### The 12 stages
     # DO 22 I=1,N 
@@ -135,7 +135,7 @@ function error_estimation(solver::DP8Solver{T}, h::T) where T
     return err 
 end
 
-function stiffness_detection!(solver, naccpt, h)
+function stiffness_detection!(solver::DP8Solver{T}, naccpt::Int, h::T) where T
 
     if (mod(naccpt, solver.options.stiffness_test_activation_step) == 0) || (solver.vars.iasti > 0)
         #stnum = 0.0

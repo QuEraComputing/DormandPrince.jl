@@ -65,11 +65,11 @@ function  DormandPrince.integrate(
 end
 
 function dopri5(
-    solver, # contains f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
-    xend, 
-    hmax,
-    h, 
-)
+    solver::DP5Solver{T}, # contains f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
+    xend::T, 
+    hmax::T,
+    h::T, 
+) where T
     ##### Initializations
     # replace sign with Julia-native Base.sign
     # posneg = sign(1.0, xend-solver.vars.x)

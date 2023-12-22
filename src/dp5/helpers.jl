@@ -1,4 +1,4 @@
-function do_step!(solver, h)
+function do_step!(solver::DP5Solver{T}, h::T) where T
 
     ####### First 6 stages
 
@@ -37,7 +37,7 @@ function error_estimation(solver)
     return err 
 end
 
-function stiffness_detection!(solver, naccpt, h)
+function stiffness_detection!(solver::DP5Solver{T}, naccpt::Int, h::T) where T
     if (mod(naccpt, solver.options.stiffness_test_activation_step) == 0) || (solver.vars.iasti > 0)
         #stnum = 0.0
         #stden = 0.0
