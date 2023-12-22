@@ -48,20 +48,20 @@ end
 
 end
 
-struct Consts{T <: Real}
+struct Consts{T <: Real, Tol <: Union{Repeated{T}, Vector{T}}}
     expo1::T
     facc1::T
     facc2::T
-    atol_iter::Union{Repeated{T}, Vector{T}}
-    rtol_iter::Union{Repeated{T}, Vector{T}}
+    atol_iter::Tol
+    rtol_iter::Tol
+end
 
-    function Consts(expo1::T, options::Options{T}) where T
-        facc1 = 1.0/options.step_size_selection_one
-        facc2 = 1.0/options.step_size_selection_two
-        atol_iter = options.atol isa Number ? repeated(options.atol) : options.rtol
-        rtol_iter = options.rtol isa Number ? repeated(options.rtol) : options.rtol
-        new{T}(expo1, facc1, facc2,atol_iter,rtol_iter)
-    end
+function Consts(expo1::T, options::Options{T}) where T
+    facc1 = 1.0/options.step_size_selection_one
+    facc2 = 1.0/options.step_size_selection_two
+    atol_iter = options.atol isa T ? repeated(options.atol) : collect(T, options.atol)
+    rtol_iter = options.rtol isa T ? repeated(options.rtol) : collect(T, options.rtol)
+    Consts{T, typeof(atol_iter)}(expo1, facc1, facc2, atol_iter, rtol_iter)
 end
 
 
@@ -79,7 +79,7 @@ end
 
 # should " core_integrator" take in DP5Solver or should DP5Solver have some associated method
 # attached to it? 
-struct DP5Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
+struct DP5Solver{T, StateType , F, OptionsType, ConstsType, VarsType} <: AbstractDPSolver{T, StateType, F}
     f::F
     y::StateType
     k1::StateType
@@ -90,9 +90,9 @@ struct DP5Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
     k6::StateType
     y1::StateType
     ysti::StateType
-    options::Options{T}
-    consts::Consts{T}
-    vars::Vars{T}
+    options::OptionsType
+    consts::ConstsType
+    vars::VarsType
 
     function DP5Solver(
         f::F, 
@@ -109,11 +109,13 @@ struct DP5Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
 
         #TODO: check if y, k1, k2, k3, k4, k5, k6, y1, ysti have the same length
         options = Options{T}(;kw...)
-        expo1 = 0.20-options.beta*0.75
+        expo1 = 0.20 - options.beta * 0.75
         consts = Consts(expo1, options)
         vars = Vars{T}(;x=x, h=options.initial_step_size)
 
-        new{T, StateType, F}(f, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, vars)
+        new{T, StateType, F, typeof(options), typeof(consts), typeof(varS)}(
+            f, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, vars
+        )
     end
 end
 
@@ -135,7 +137,7 @@ end
 
 # should " core_integrator" take in DP5Solver or should DP5Solver have some associated method
 # attached to it? 
-struct DP8Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
+struct DP8Solver{T, StateType ,F, OptionsType, ConstsType, VarsType} <: AbstractDPSolver{T, StateType, F}
     f::F
     y::StateType
     k1::StateType
@@ -149,9 +151,9 @@ struct DP8Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
     k9::StateType
     k10::StateType
     y1::StateType
-    options::Options{T}
-    consts::Consts{T}
-    vars::Vars{T}
+    options::OptionsType
+    consts::ConstsType
+    vars::VarsType
 
     function DP8Solver(
         f::F, 
@@ -169,7 +171,7 @@ struct DP8Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
         k10::StateType,
         y1::StateType; 
         # overwrite default options with explicit kw
-        # beta::T = 0.0,
+        beta::T = 0.0,
         step_size_selection_one::T = 0.333,
         step_size_selection_two::T = 6.0,
         kw...) where {T <: Real, StateType <: AbstractVector, F}
@@ -177,16 +179,18 @@ struct DP8Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
         #TODO: check if y, k1, k2, k3, k4, k5, k6, y1, ysti have the same length
 
         options = Options{T}(;
-            # beta=beta, 
+            beta=beta, 
             step_size_selection_one=step_size_selection_one, 
             step_size_selection_two=step_size_selection_two, 
             kw...
         )
-        expo1 = 0.125-options.beta*0.2
+        expo1 = 0.125 - options.beta * 0.2
         consts = Consts(expo1, options)
         vars = Vars{T}(;x=x, h=options.initial_step_size)
 
-        new{T, StateType, F}(f, y, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, y1, options, consts, vars)
+        new{T, StateType, F, typeof(options), typeof(consts), typeof(vars)}(
+            f, y, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, y1, options, consts, vars
+        )
     end
 end
 

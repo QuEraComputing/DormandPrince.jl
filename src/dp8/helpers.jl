@@ -123,7 +123,8 @@ function error_estimation(solver::DP8Solver{T}, h::T) where T
         sk = atoli + rtoli*max(abs(yi), abs(k5i))
         erri2 = k4i - bhh1*k1i - bhh2*k9i - bhh3*k3i
         erri1 = er1*k1i + er6*k6i + er7*k7i + er8*k8i + er9*k9i + er10*k10i + er11*k2i + er12*k3i
-        ((abs(erri1)/sk)^2, (abs(erri2)/sk)^2)
+        
+        (abs(erri1)/sk)^2, (abs(erri2)/sk)^2
     end
 
     # DENO=ERR+0.01D0*ERR2
