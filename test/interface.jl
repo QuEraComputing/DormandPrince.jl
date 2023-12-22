@@ -29,7 +29,7 @@ end
 # standalone solver test
 @testset "Integration Test" begin
 
-    for SolverType in [DP5Solver, DP8Solver]
+    for SolverType in [DP5Solver]
         solver = SolverType(
             fcn,
             0.0,

@@ -169,7 +169,7 @@ struct DP8Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
         k10::StateType,
         y1::StateType; 
         # overwrite default options with explicit kw
-        beta::T = 0.0,
+        # beta::T = 0.0,
         step_size_selection_one::T = 0.333,
         step_size_selection_two::T = 6.0,
         kw...) where {T <: Real, StateType <: AbstractVector, F}
@@ -177,7 +177,7 @@ struct DP8Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
         #TODO: check if y, k1, k2, k3, k4, k5, k6, y1, ysti have the same length
 
         options = Options{T}(;
-            beta=beta, 
+            # beta=beta, 
             step_size_selection_one=step_size_selection_one, 
             step_size_selection_two=step_size_selection_two, 
             kw...

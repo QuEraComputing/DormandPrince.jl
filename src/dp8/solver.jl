@@ -125,7 +125,7 @@ function dop853(
         nfcn += 11
 
         ###### Error Estimation
-        err = error_estimation(solver)
+        err = error_estimation(solver, h)
 
         ###### Computation of hnew
         fac11 = err^solver.consts.expo1

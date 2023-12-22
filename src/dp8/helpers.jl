@@ -93,9 +93,9 @@ function do_step!(solver, h)
 
 end
 
-function error_estimation(solver)
+function error_estimation(solver::DP8Solver{T}, h::T) where T
 
-    err, err2 = mapreduce(.+, 
+    err1, err2 = mapreduce(.+, 
         solver.consts.atol_iter, 
         solver.consts.rtol_iter, 
         solver.y,
@@ -108,7 +108,8 @@ function error_estimation(solver)
         solver.k7,
         solver.k8,
         solver.k9,
-        solver.k10,
+        solver.k10
+        ; init=(zero(T), zero(T))
     ) do atoli, rtoli, yi, k1i, k2i, k3i, k4i, k5i, k6i, k7i, k8i, k9i, k10i
 
         #     DO 42 I=1,N 
@@ -120,29 +121,21 @@ function error_estimation(solver)
         # 42    ERR=ERR+(ERRI/SK)**2
 
         sk = atoli + rtoli*max(abs(yi), abs(k5i))
-        erri = k4i - bhh1*k1i - bhh2*k9i - bhh3*k3i
-        err2 = (abs(erri)/sk)^2
+        erri2 = k4i - bhh1*k1i - bhh2*k9i - bhh3*k3i
+        erri1 = er1*k1i + er6*k6i + er7*k7i + er8*k8i + er9*k9i + er10*k10i + er11*k2i + er12*k3i
+        println("sk = $sk, erri1 = $erri1, erri2 = $erri2")
 
-        erri = er1*k1i + er6*k6i + er7*k7i + er8*k8i + er9*k9i + er10*k10i + er11*k2i + er12*k3i
-        err = (abs(erri)/sk)^2
-
-        (err, err2)
-
+        ((abs(erri1)/sk)^2, (abs(erri2)/sk)^2)
     end
 
     # DENO=ERR+0.01D0*ERR2
     # IF (DENO.LE.0.D0) DENO=1.D0
     # ERR=ABS(H)*ERR*SQRT(1.D0/(N*DENO))
-
-    den0 = err + 0.01*err2
-    den0 = if den0 <= 0.0
-        1.0
-    else
-        den0
-    end
-
-    err = abs(solver.vars.h)*err*sqrt(1.0/(length(solver.y) * den0))
-
+    den0 = err1 + 0.01*err2
+    den0 = den0 <= 0.0 ? 1.0 : den0
+    err = abs(h)*err1*sqrt(1.0/(length(solver.y) * den0))
+    println("err = $err, err1 = $err1, err2 = $err2")
+    println()
     return err 
 end
 
