@@ -5,7 +5,7 @@ using DormandPrince:
     LARGER_NMAX_NEEDED,
     STEP_SIZE_BECOMES_TOO_SMALL
     
-using DormandPrince. DP5: dopcor
+using DormandPrince. DP5: dopri5
 
 function fcn(x, y, f) 
     f[1] = y[1]^2 - y[1]^3
@@ -20,7 +20,7 @@ end
     )
 
     
-    h, report = dopcor(solver, 2/0.0001, 0.1, 0.0)
+    h, report = dopri5(solver, 2/0.0001, 0.1, 0.0)
     @test report.idid == LARGER_NMAX_NEEDED
 
 end
@@ -34,6 +34,6 @@ end
     )
 
     
-    h, report = dopcor(solver, 2/0.0001, 0.1, 0.0)
+    h, report = dopri5(solver, 2/0.0001, 0.1, 0.0)
     @test report.idid == STEP_SIZE_BECOMES_TOO_SMALL
 end
