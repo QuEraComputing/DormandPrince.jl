@@ -5,6 +5,7 @@ using Base.Iterators:repeated, Repeated
 # internal imports
 include("types.jl")
 include("hinit.jl")
+include("checks.jl")
 include("interface.jl")
 include("dp5/mod.jl")
 
