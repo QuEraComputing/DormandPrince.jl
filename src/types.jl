@@ -68,6 +68,7 @@ end
 
 @kwdef mutable struct Vars{T <: Real}
     x::T = zero(T)
+    xph::T = zero(T)
     h::T = zero(T)
     facold::T = 1e-4
     iasti::Int = 0

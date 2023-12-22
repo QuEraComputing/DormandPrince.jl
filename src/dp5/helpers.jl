@@ -37,19 +37,6 @@ function error_estimation(solver)
     return err 
 end
 
-function estimate_second_derivative(solver, h)
-        
-    der2 = mapreduce(+, solver.consts.atol_iter, solver.consts.rtol_iter, solver.k2, solver.k1, solver.y) do atoli, rtoli, f1i, f0i, yi
-        sk = atoli + rtoli*abs(yi)
-        ((f1i-f0i)/sk)^2
-    end
-
-    der2 = sqrt(der2)/h
-
-    return der2
-
-end
-
 function stiffness_detection!(solver, naccpt, h)
     if (mod(naccpt, solver.options.stiffness_test_activation_step) == 0) || (solver.vars.iasti > 0)
         #stnum = 0.0
@@ -63,7 +50,7 @@ function stiffness_detection!(solver, naccpt, h)
         end
 
         if stden > 0.0
-            solver.vars.hlamb = h*sqrt(stnum/stden)
+            solver.vars.hlamb = abs(h)*sqrt(stnum/stden)
         else
             solver.vars.hlamb = Inf
         end
@@ -81,23 +68,4 @@ function stiffness_detection!(solver, naccpt, h)
             end
         end
     end
-end
-
-function euler_first_guess(solver, hmax, posneg)
-
-    dnf, dny = mapreduce(.+, solver.consts.atol_iter, solver.consts.rtol_iter, solver.k1, solver.y) do atoli, rtoli, f0i, yi
-        sk = atoli + rtoli*abs(yi)
-        abs(f0i/sk)^2, abs(yi/sk)^2 # dnf, dny
-    end
-
-
-    if (dnf <= 1.0e-10) || (dny <= 1.0e-10)
-        h = 1.0e-6
-    else
-        h = 0.01*sqrt(dny/dnf)
-    end
-    h = min(h, hmax)
-    h = h * Base.sign(posneg)
-
-    return h, dnf
 end
