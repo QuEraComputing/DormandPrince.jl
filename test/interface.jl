@@ -1,6 +1,6 @@
 using Test
 using LinearAlgebra
-using DormandPrince: DP5Solver, integrate
+using DormandPrince: DP5Solver, DP8Solver, integrate
 
 function evolution_operator(t::Float64)
     ϕ = 2.2 * sin(π * t)^2
@@ -28,15 +28,19 @@ end
 
 # standalone solver test
 @testset "Integration Test" begin
-    solver = DP5Solver(
-        fcn,
-        0.0,
-        ComplexF64[1.0, 0.0]
-    )
 
-    integrate(solver, 2π)
+    for SolverType in [DP5Solver, DP8Solver]
+        solver = SolverType(
+            fcn,
+            0.0,
+            ComplexF64[1.0, 0.0]
+        )
 
-    @test solver.y ≈ solution(2π)
+        integrate(solver, 2π)
+
+        @test solver.y ≈ solution(2π)
+    end
+    
 end
 
 # Test integrate() 

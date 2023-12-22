@@ -95,11 +95,12 @@ end
 
 function error_estimation(solver)
 
-    err, err2 = mapreduce(+, 
+    err, err2 = mapreduce(.+, 
         solver.consts.atol_iter, 
         solver.consts.rtol_iter, 
         solver.y,
         solver.k1,
+        solver.k2,
         solver.k3,
         solver.k4,
         solver.k5,

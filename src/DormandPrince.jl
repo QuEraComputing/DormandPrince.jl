@@ -10,11 +10,8 @@ include("interface.jl")
 include("dp5/mod.jl")
 include("dp8/mod.jl")
 
-
-using DormandPrince. DP5: core_integrator
-
 # export Interface
-export DP5Solver, integrate
+export DP5Solver, DP8Solver, integrate
 
 
 end # DormandPrince

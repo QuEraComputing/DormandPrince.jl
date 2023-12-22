@@ -3,10 +3,10 @@
 #include("checks.jl")
 #include("helpers.jl")
 
-function  core_integrator(
+function  DormandPrince.integrate(
    solver::DP5Solver{T},
    xend::T
-) where {T <: Real}
+) where T
 
     # check nmax, uround, safety factor, beta, safety_factor
     # just accept solver.options and handle accessing attributes internally
@@ -47,7 +47,7 @@ function  core_integrator(
     =#
 
 
-    h, report = dopcor(
+    h, report = dopri5(
         solver, # contains x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
         xend, 
         hmax, 
@@ -64,7 +64,7 @@ function  core_integrator(
 
 end
 
-function dopcor(
+function dopri5(
     solver, # contains f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
     xend, 
     hmax,
