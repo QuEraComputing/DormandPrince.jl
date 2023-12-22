@@ -113,7 +113,7 @@ struct DP5Solver{T, StateType , F, OptionsType, ConstsType, VarsType} <: Abstrac
         consts = Consts(expo1, options)
         vars = Vars{T}(;x=x, h=options.initial_step_size)
 
-        new{T, StateType, F, typeof(options), typeof(consts), typeof(varS)}(
+        new{T, StateType, F, typeof(options), typeof(consts), typeof(vars)}(
             f, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, vars
         )
     end

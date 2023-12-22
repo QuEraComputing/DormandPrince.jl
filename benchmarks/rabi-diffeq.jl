@@ -13,7 +13,7 @@ u0 = ComplexF64[1.0, 0.0]
 tspan = (0.0, 2π)
 prob = ODEProblem(f, u0, tspan)
 # get precompilation out of the way
-sol = solve(prob, DP5(), reltol=1e-10, abstol=1e-10)
+sol = solve(prob, DP8(), reltol=1e-10, abstol=1e-10)
 
 # terminate benchmark after maximum of 5 minutes
-@benchmark solve(prob, DP5(), reltol=1e-10, abstol=1e-10) samples=10000 evals=5 seconds=300
+@benchmark solve(prob, DP8(), reltol=1e-10, abstol=1e-10) samples=10000 evals=5 seconds=300
