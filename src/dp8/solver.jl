@@ -83,7 +83,7 @@ function dopcor(
 
     solver.f(solver.vars.x, solver.y, solver.k1)
     hmax = abs(hmax)
-    iord = 5
+    iord = 8
 
     # may be considered type unstable
     if iszero(h)
@@ -139,10 +139,13 @@ function dopcor(
             solver.vars.facold = max(err, 1e-4)
             naccpt += 1
             ###### Stiffness Detection
+            # TODO: enable / disable with Preferences.jl
+            xph = solver.vars.x + h
+            solver.f(xph, solver.k5, solver.k4)
             stiffness_detection!(solver, naccpt, h)
 
-            solver.k1 .= solver.k2
-            solver.y  .= solver.y1
+            solver.k1 .= solver.k4
+            solver.y  .= solver.k5
 
             solver.vars.x += h
 
@@ -193,44 +196,4 @@ function dopcor(
         nrejct
     )
     
-end
-
-function hinit(
-    solver, 
-    posneg, 
-    iord,
-    hmax
-    # f0 arg is k1 from dopcor
-    # f1 arg is k2 from dopcor
-    # y1 arg is k3 from dopcor
-)
-    #=
-    Compute a first guess for explicit euler as
-        h = 0.01 * norm (y0) / norm (f0)
-    the increment for explicit euler is small
-    compared to the solution
-    =#
-    h, dnf = euler_first_guess(solver, hmax, posneg)
-
-    ###### Perform an explicit step
-    #y1 = y + h*f0
-    #fcn(n, x+h, y1, f1)
-    # copyto!(solver.y1, solver.y + h*solver.k1)
-    solver.y1 .= solver.y .+ h .*solver.k1
-    solver.f(solver.vars.x + h, solver.k3, solver.k2)
-
-    ###### Estimate the second derivative of the solution
-    der2 = estimate_second_derivative(solver, h)
-
-    ##### Step size is computed such that
-    ##### H**IORD * MAX ( NORM(F0), NORM(F1), DER2 ) = 0.01
-    der12 = max(abs(der2), sqrt(dnf))
-    if der12 <= 1e-15
-        h1 = max(1.0e-6, abs(h)*1.0e-3)
-    else
-        h1 = (0.01/der12)^(1.0/iord)
-    end
-    h = min(100*abs(h), h1, hmax)
-    return h * Base.sign(posneg)
-
 end
