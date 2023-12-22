@@ -55,8 +55,7 @@ struct Consts{T <: Real}
     atol_iter::Union{Repeated{T}, Vector{T}}
     rtol_iter::Union{Repeated{T}, Vector{T}}
 
-    function Consts(options::Options{T}) where {T <: Real}
-        expo1 = 0.20-options.beta*0.75
+    function Consts(expo1::T, options::Options{T}) where T
         facc1 = 1.0/options.step_size_selection_one
         facc2 = 1.0/options.step_size_selection_two
         atol_iter = options.atol isa Number ? repeated(options.atol) : options.rtol
@@ -109,9 +108,9 @@ struct DP5Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
         ysti::StateType; kw...) where {T <: Real, StateType <: AbstractVector, F}
 
         #TODO: check if y, k1, k2, k3, k4, k5, k6, y1, ysti have the same length
-
         options = Options{T}(;kw...)
-        consts = Consts(options)
+        expo1 = 0.20-options.beta*0.75
+        consts = Consts(expo1, options)
         vars = Vars{T}(;x=x, h=options.initial_step_size)
 
         new{T, StateType, F}(f, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, vars)
@@ -183,7 +182,8 @@ struct DP8Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
             step_size_selection_two=step_size_selection_two, 
             kw...
         )
-        consts = Consts(options)
+        expo1 = 0.125-options.beta*0.2
+        consts = Consts(expo1, options)
         vars = Vars{T}(;x=x, h=options.initial_step_size)
 
         new{T, StateType, F}(f, y, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, y1, options, consts, vars)
