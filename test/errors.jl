@@ -7,13 +7,9 @@ using DormandPrince:
     
 using DormandPrince. DP5: dopri5
 
-function fcn(x, y, f) 
-    f[1] = y[1]^2 - y[1]^3
-end
-
 @testset "Larger nmax needed" begin
     solver = DP5Solver(
-        fcn,
+        stiff_fcn,
         0.0, # start at 0.0
         [0.0001] # delta
         ; maximum_allowed_steps=1
@@ -27,7 +23,7 @@ end
 
 @testset "Step size becomes too small" begin
     solver = DP5Solver(
-        fcn,
+        stiff_fcn,
         0.0,
         [0.0001]
         ; uround=10000
