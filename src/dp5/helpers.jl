@@ -29,7 +29,7 @@ function error_estimation(solver)
 
     err = mapreduce(+, solver.consts.atol_iter, solver.consts.rtol_iter, solver.k4, solver.y, solver.ysti) do atoli, rtoli, k4i, yi, ystii
         sk = atoli + rtoli*max(abs(yi), abs(ystii))
-        abs(k4i/sk)^2
+        (abs(k4i)/sk)^2
     end
 
     err = sqrt(err/length(solver.y))
