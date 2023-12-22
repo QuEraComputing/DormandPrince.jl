@@ -64,10 +64,10 @@ function  DormandPrince.integrate(
 end
 
 function dop853(
-    solver, # contains f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
-    xend, 
-    hmax,
-    h, 
+    solver::DP8Solver{T}, # contains f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
+    xend::T, 
+    hmax::T,
+    h::T, 
 ) where T
     ##### Initializations
     # replace sign with Julia-native Base.sign
@@ -97,7 +97,6 @@ function dop853(
 
     ###### Basic Integration Step
     for _ in 1:solver.options.maximum_allowed_steps
-        println("x = $(solver.vars.x), h = $h, y = $(solver.y)")
         # if nstep > solver.options.maximum_allowed_steps
         #     # GOTO 78
         #     # println(" MORE THAN NMAX = ", solver.options.maximum_allowed_steps, " STEPS ARE NEEDED")
@@ -134,7 +133,6 @@ function dop853(
         ###### we require fac1 <= hnew/h <= fac2
         fac = max(solver.consts.facc2, min(solver.consts.facc1, fac/solver.options.safety_factor)) # facc1, facc2, fac must be Float64 
         hnew = h/fac
-        println("hnew = $hnew, h = $h, fac = $fac, fac11 = $fac11, err = $err")
         if err <= 1.0 
             ###### Step is accepted
             solver.vars.facold = max(err, 1e-4)

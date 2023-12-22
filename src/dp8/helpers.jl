@@ -123,8 +123,6 @@ function error_estimation(solver::DP8Solver{T}, h::T) where T
         sk = atoli + rtoli*max(abs(yi), abs(k5i))
         erri2 = k4i - bhh1*k1i - bhh2*k9i - bhh3*k3i
         erri1 = er1*k1i + er6*k6i + er7*k7i + er8*k8i + er9*k9i + er10*k10i + er11*k2i + er12*k3i
-        println("sk = $sk, erri1 = $erri1, erri2 = $erri2")
-
         ((abs(erri1)/sk)^2, (abs(erri2)/sk)^2)
     end
 
@@ -134,8 +132,6 @@ function error_estimation(solver::DP8Solver{T}, h::T) where T
     den0 = err1 + 0.01*err2
     den0 = den0 <= 0.0 ? 1.0 : den0
     err = abs(h)*err1*sqrt(1.0/(length(solver.y) * den0))
-    println("err = $err, err1 = $err1, err2 = $err2")
-    println()
     return err 
 end
 
