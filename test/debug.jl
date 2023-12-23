@@ -38,7 +38,7 @@ function run()
     println(report.num_rejected_steps)
     println(norm(solver.y))
     solver.vars.h
-    solver.y
+    @assert solver.y ≈ solution(1.0)
 
 end
 

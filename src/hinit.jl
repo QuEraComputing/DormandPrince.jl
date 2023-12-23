@@ -4,19 +4,19 @@ function euler_first_guess(solver::AbstractDPSolver{T}, hmax::T, posneg::T) wher
 
     dnf, dny = mapreduce(.+, solver.consts.atol_iter, solver.consts.rtol_iter, solver.k1, solver.y) do atoli, rtoli, f0i, yi
         sk = atoli + rtoli*abs(yi)
-        abs(f0i/sk)^2, abs(yi/sk)^2 # dnf, dny
+        (abs(f0i)/sk)^2, (abs(yi)/sk)^2 # dnf, dny
     end
 
+    println("euler_first_guess: dnf = $dnf, dny = $dny")
 
     if (dnf <= 1.0e-10) || (dny <= 1.0e-10)
         h = 1.0e-6
     else
         h = 0.01*sqrt(dny/dnf)
     end
-    h = min(h, hmax)
-    h = h * Base.sign(posneg)
 
-    return h, dnf
+    return min(h, hmax) * Base.sign(posneg), dnf
+
 end
 
 
@@ -48,14 +48,14 @@ function hinit(
     the increment for explicit euler is small
     compared to the solution
     =#
+    println("hinit: y = $(solver.y), k1 = $(solver.k1), k2 = $(solver.k2), k3 = $(solver.k3)")
     h, dnf = euler_first_guess(solver, hmax, posneg)
 
     ###### Perform an explicit step
     #y1 = y + h*f0
     #fcn(n, x+h, y1, f1)
-    # copyto!(solver.y1, solver.y + h*solver.k1)
     solver.y1 .= solver.y .+ h .*solver.k1
-    solver.f(solver.vars.x + h, solver.k3, solver.k2)
+    solver.f(solver.vars.x + h, solver.y1, solver.k2)
 
     ###### Estimate the second derivative of the solution
     der2 = estimate_second_derivative(solver, h)
