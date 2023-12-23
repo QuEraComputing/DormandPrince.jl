@@ -7,8 +7,6 @@ function euler_first_guess(solver::AbstractDPSolver{T}, hmax::T, posneg::T) wher
         (abs(f0i)/sk)^2, (abs(yi)/sk)^2 # dnf, dny
     end
 
-    println("euler_first_guess: dnf = $dnf, dny = $dny")
-
     if (dnf <= 1.0e-10) || (dny <= 1.0e-10)
         h = 1.0e-6
     else
@@ -48,7 +46,6 @@ function hinit(
     the increment for explicit euler is small
     compared to the solution
     =#
-    println("hinit: y = $(solver.y), k1 = $(solver.k1), k2 = $(solver.k2), k3 = $(solver.k3)")
     h, dnf = euler_first_guess(solver, hmax, posneg)
 
     ###### Perform an explicit step
