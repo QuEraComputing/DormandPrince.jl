@@ -7,21 +7,21 @@ end
 # gets the first (t,y), return index which is the state
 # here we choose 2 because 1 is the initial state which 
 # is has been returned by the iterator
-function Base.iterate(dp5_iterator::SolverIterator)
-    length(dp5_iterator.times) == 0 && return nothing # empty iterator
+function Base.iterate(solver_iter::SolverIterator)
+    length(solver_iter.times) == 0 && return nothing # empty iterator
     # integrate to first time
-    integrate(dp5_iterator.solver, first(dp5_iterator.times))
+    integrate(solver_iter.solver, first(solver_iter.times))
     # return value and index which is the state
-    return (dp5_iterator.times[1], dp5_iterator.solver.y), 2    
+    return (solver_iter.times[1], solver_iter.solver.y), 2    
 end
 
 # gets the next (t,y), return index+! which is the updated state
-function Base.iterate(dp5_iterator::SolverIterator, index::Int) 
-    index > length(dp5_iterator.times) && return nothing # end of iterator
+function Base.iterate(solver_iter::SolverIterator, index::Int) 
+    index > length(solver_iter.times) && return nothing # end of iterator
     # integrate to next time
-    integrate(dp5_iterator.solver, dp5_iterator.times[index])
+    integrate(solver_iter.solver, solver_iter.times[index])
     # return time and state
-    return (dp5_iterator.times[index], dp5_iterator.solver.y), index+1
+    return (solver_iter.times[index], solver_iter.solver.y), index+1
 end
 
 # 3 modes of operation for integrate
