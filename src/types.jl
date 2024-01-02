@@ -6,6 +6,7 @@ abstract type AbstractDPSolver{T <: Real, StateType <: AbstractVector, F} end
     INPUT_NOT_CONSISTENT = -1 # use for check failures in the beginning of  core_integrator call
     LARGER_NMAX_NEEDED = -2
     STEP_SIZE_BECOMES_TOO_SMALL = -3
+    STEP_SIZE_BECOMES_NAN = -4
 end
 
 @enum Checks begin
@@ -48,26 +49,26 @@ end
 
 end
 
-struct Consts{T <: Real}
+struct Consts{T <: Real, Tol <: Union{Repeated{T}, Vector{T}}}
     expo1::T
     facc1::T
     facc2::T
-    atol_iter::Union{Repeated{T}, Vector{T}}
-    rtol_iter::Union{Repeated{T}, Vector{T}}
+    atol_iter::Tol
+    rtol_iter::Tol
+end
 
-    function Consts(options::Options{T}) where {T <: Real}
-        expo1 = 0.20-options.beta*0.75
-        facc1 = 1.0/options.step_size_selection_one
-        facc2 = 1.0/options.step_size_selection_two
-        atol_iter = options.atol isa Number ? repeated(options.atol) : options.rtol
-        rtol_iter = options.rtol isa Number ? repeated(options.rtol) : options.rtol
-        new{T}(expo1, facc1, facc2,atol_iter,rtol_iter)
-    end
+function Consts(expo1::T, options::Options{T}) where T
+    facc1 = 1.0/options.step_size_selection_one
+    facc2 = 1.0/options.step_size_selection_two
+    atol_iter = options.atol isa T ? repeated(options.atol) : collect(T, options.atol)
+    rtol_iter = options.rtol isa T ? repeated(options.rtol) : collect(T, options.rtol)
+    Consts{T, typeof(atol_iter)}(expo1, facc1, facc2, atol_iter, rtol_iter)
 end
 
 
 @kwdef mutable struct Vars{T <: Real}
     x::T = zero(T)
+    xph::T = zero(T)
     h::T = zero(T)
     facold::T = 1e-4
     iasti::Int = 0
@@ -79,7 +80,7 @@ end
 
 # should " core_integrator" take in DP5Solver or should DP5Solver have some associated method
 # attached to it? 
-struct DP5Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
+struct DP5Solver{T, StateType , F, OptionsType, ConstsType, VarsType} <: AbstractDPSolver{T, StateType, F}
     f::F
     y::StateType
     k1::StateType
@@ -90,9 +91,9 @@ struct DP5Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
     k6::StateType
     y1::StateType
     ysti::StateType
-    options::Options{T}
-    consts::Consts{T}
-    vars::Vars{T}
+    options::OptionsType
+    consts::ConstsType
+    vars::VarsType
 
     function DP5Solver(
         f::F, 
@@ -108,12 +109,14 @@ struct DP5Solver{T, StateType ,F} <: AbstractDPSolver{T, StateType, F}
         ysti::StateType; kw...) where {T <: Real, StateType <: AbstractVector, F}
 
         #TODO: check if y, k1, k2, k3, k4, k5, k6, y1, ysti have the same length
-
         options = Options{T}(;kw...)
-        consts = Consts(options)
+        expo1 = 0.20 - options.beta * 0.75
+        consts = Consts(expo1, options)
         vars = Vars{T}(;x=x, h=options.initial_step_size)
 
-        new{T, StateType, F}(f, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, vars)
+        new{T, StateType, F, typeof(options), typeof(consts), typeof(vars)}(
+            f, y, k1, k2, k3, k4, k5, k6, y1, ysti, options, consts, vars
+        )
     end
 end
 
@@ -121,14 +124,92 @@ function DP5Solver(
     f, 
     x::Real, 
     y::AbstractVector; kw...)
-    k1 = copy(y)
-    k2 = copy(y)
-    k3 = copy(y)
-    k4 = copy(y)
-    k5 = copy(y)
-    k6 = copy(y)
-    y1 = copy(y)
+    k1 = similar(y)
+    k2 = similar(y)
+    k3 = similar(y)
+    k4 = similar(y)
+    k5 = similar(y)
+    k6 = similar(y)
+    y1 = similar(y)
     ysti = copy(y)
     DP5Solver(f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti;kw...)
+end
+
+
+# should " core_integrator" take in DP5Solver or should DP5Solver have some associated method
+# attached to it? 
+struct DP8Solver{T, StateType ,F, OptionsType, ConstsType, VarsType} <: AbstractDPSolver{T, StateType, F}
+    f::F
+    y::StateType
+    k1::StateType
+    k2::StateType
+    k3::StateType
+    k4::StateType
+    k5::StateType
+    k6::StateType
+    k7::StateType
+    k8::StateType
+    k9::StateType
+    k10::StateType
+    y1::StateType
+    options::OptionsType
+    consts::ConstsType
+    vars::VarsType
+
+    function DP8Solver(
+        f::F, 
+        x::T, 
+        y::StateType,
+        k1::StateType,
+        k2::StateType,
+        k3::StateType,
+        k4::StateType,
+        k5::StateType,
+        k6::StateType,
+        k7::StateType,
+        k8::StateType,
+        k9::StateType,
+        k10::StateType,
+        y1::StateType; 
+        # overwrite default options with explicit kw
+        beta::T = 0.0,
+        step_size_selection_one::T = 0.333,
+        step_size_selection_two::T = 6.0,
+        kw...) where {T <: Real, StateType <: AbstractVector, F}
+
+        #TODO: check if y, k1, k2, k3, k4, k5, k6, y1, ysti have the same length
+
+        options = Options{T}(;
+            beta=beta, 
+            step_size_selection_one=step_size_selection_one, 
+            step_size_selection_two=step_size_selection_two, 
+            kw...
+        )
+        expo1 = 0.125 - options.beta * 0.2
+        consts = Consts(expo1, options)
+        vars = Vars{T}(;x=x, h=options.initial_step_size)
+
+        new{T, StateType, F, typeof(options), typeof(consts), typeof(vars)}(
+            f, y, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, y1, options, consts, vars
+        )
+    end
+end
+
+function DP8Solver(
+    f, 
+    x::Real, 
+    y::AbstractVector; kw...)
+    k1 = similar(y)
+    k2 = similar(y)
+    k3 = similar(y)
+    k4 = similar(y)
+    k5 = similar(y)
+    k6 = similar(y)
+    k7 = similar(y)
+    k8 = similar(y)
+    k9 = similar(y)
+    k10 = similar(y)
+    y1 = similar(y)
+    DP8Solver(f, x, y, k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, y1;kw...)
 end
 

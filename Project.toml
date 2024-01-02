@@ -1,7 +1,7 @@
 name = "DormandPrince"
 uuid = "5e45e72d-22b8-4dd0-9c8b-f96714864bcd"
 authors = ["John Long<jlong@quera.com>", "Phillip Weinberg<pweinberg@quera.com>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 

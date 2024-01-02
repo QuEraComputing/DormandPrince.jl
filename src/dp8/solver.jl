@@ -4,7 +4,7 @@
 #include("helpers.jl")
 
 function  DormandPrince.integrate(
-   solver::DP5Solver{T},
+   solver::DP8Solver{T},
    xend::T
 ) where T
 
@@ -46,8 +46,7 @@ function  DormandPrince.integrate(
     y :D 
     =#
 
-
-    h, report = dopri5(
+    h, report = dop853(
         solver, # contains x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
         xend, 
         hmax, 
@@ -64,8 +63,8 @@ function  DormandPrince.integrate(
 
 end
 
-function dopri5(
-    solver::DP5Solver{T}, # contains f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
+function dop853(
+    solver::DP8Solver{T}, # contains f, x, y, k1, k2, k3, k4, k5, k6, y1, ysti, options
     xend::T, 
     hmax::T,
     h::T, 
@@ -83,7 +82,7 @@ function dopri5(
 
     solver.f(solver.vars.x, solver.y, solver.k1)
     hmax = abs(hmax)
-    iord = 5
+    iord = 8
 
     # may be considered type unstable
     if iszero(h)
@@ -102,7 +101,7 @@ function dopri5(
             idid = DormandPrince.STEP_SIZE_BECOMES_NAN
             break
         end
-        
+
         if (0.10 * abs(h)) <= abs(solver.vars.x)*solver.options.uround 
             # GOTO 77
             # println("STEP SIZE TOO SMALL, H = ", h)
@@ -121,10 +120,10 @@ function dopri5(
 
         do_step!(solver, h)
 
-        nfcn += 6
+        nfcn += 11
 
         ###### Error Estimation
-        err = error_estimation(solver)
+        err = error_estimation(solver, h)
 
         ###### Computation of hnew
         fac11 = err^solver.consts.expo1
@@ -138,10 +137,15 @@ function dopri5(
             solver.vars.facold = max(err, 1e-4)
             naccpt += 1
             ###### Stiffness Detection
+            # TODO: enable / disable with Preferences.jl
+            xph = solver.vars.x + h
+            solver.f(xph, solver.k5, solver.k4)
+            nfcn += 1
+            
             stiffness_detection!(solver, naccpt, h)
 
-            solver.k1 .= solver.k2
-            solver.y  .= solver.y1
+            solver.k1 .= solver.k4
+            solver.y  .= solver.k5
 
             solver.vars.x += h
 

@@ -1,7 +1,7 @@
-module  DP5
+module  DP8
 
 using ..DormandPrince: DormandPrince, 
-    DP5Solver, 
+    DP8Solver, 
     Vars, 
     Consts, 
     Options, 

@@ -1,6 +1,6 @@
 using Test
 using LinearAlgebra
-using DormandPrince: DP5Solver, integrate
+using DormandPrince: DP5Solver, DP8Solver, integrate
 
 function evolution_operator(t::Float64)
     ϕ = 2.2 * sin(π * t)^2
@@ -28,15 +28,19 @@ end
 
 # standalone solver test
 @testset "Integration Test" begin
-    solver = DP5Solver(
-        fcn,
-        0.0,
-        ComplexF64[1.0, 0.0]
-    )
 
-    integrate(solver, 2π)
+    for SolverType in [DP5Solver, DP8Solver]
+        solver = SolverType(
+            fcn,
+            0.0,
+            ComplexF64[1.0, 0.0]
+        )
 
-    @test solver.y ≈ solution(2π)
+        integrate(solver, 2π)
+
+        @test solver.y ≈ solution(2π)
+    end
+    
 end
 
 # Test integrate() 
@@ -46,7 +50,6 @@ end
     @testset "Iterator Interface" begin
         times = [0.1, 0.5, 1.1]
         exact_values = []
-        dp5_values = []
         
         # get exact values
         for t in times
@@ -54,44 +57,55 @@ end
         end
 
         # use iterator to get exact values
-        solver = DP5Solver(
-            fcn,
-            0.0,
-            ComplexF64[1.0, 0.0]
-        )
+        
+        for SolverType in [DP5Solver, DP8Solver]
+            values = []
+            solver = SolverType(
+                fcn,
+                0.0,
+                ComplexF64[1.0, 0.0]
+            )
+            
+            iter = integrate(solver, times)
 
-        iter = integrate(solver, times)
+            for (t,y) in iter
+                push!(values, copy(y))
+            end
 
-        for (t,y) in iter
-            push!(dp5_values, copy(y))
+            @test values ≈ exact_values
         end
 
-        @test dp5_values ≈ exact_values
+
     end
 
     @testset "Callback Interface" begin
         times = [0.1, 0.5, 1.1]
-        callback_times = []
         exact_values = []
-        dp5_values = []
-        
+
         # get exact values
         for t in times
             push!(exact_values, solution(t))
         end
 
-        # use iterator to get exact values
-        solver = DP5Solver(
-            fcn,
-            0.0,
-            ComplexF64[1.0, 0.0]
-        )
 
-        integrate(solver, times) do t, y
-            push!(callback_times, t)
-            push!(dp5_values, copy(y))
+        for SolverType in [DP5Solver, DP8Solver]
+            values = []
+            callback_times = []
+
+            # use iterator to get exact values
+            solver = SolverType(
+                fcn,
+                0.0,
+                ComplexF64[1.0, 0.0]
+            )
+
+            integrate(solver, times) do t, y
+                push!(callback_times, t)
+                push!(values, copy(y))
+            end
+
+            @test values ≈ exact_values
+            @test callback_times == times
         end
-
-        @test dp5_values ≈ exact_values
     end
 end
