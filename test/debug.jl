@@ -1,5 +1,5 @@
 using LinearAlgebra
-using DormandPrince: DP5Solver, DP8Solver, integrate
+using DormandPrince: DP8Solver, DP5Solver, integrate
 
 function evolution_operator(t::Float64)
     ϕ = 2.2 * sin(π * t)^2
@@ -33,13 +33,20 @@ function run()
         ComplexF64[1.0, 0.0]
     )
     
-    report = integrate(solver, 1.0)
+    report = integrate(solver, 2π)
     
-    println(report.num_rejected_steps)
-    println(norm(solver.y))
+    if !(solver.y ≈ solution(2π))
+        println("failed, $(solver.y) != $(solution(2π)), $(report.idid)")
+    end
+    @assert solver.y ≈ solution(2π)
+    # println(report.num_rejected_steps)
+    # println(norm(solver.y))
     solver.vars.h
-    @assert solver.y ≈ solution(1.0)
+    solver.y
 
 end
 
-run()
+for i in 1:1000
+    run()
+    println("-------------------------------------------------------------------------------")
+end

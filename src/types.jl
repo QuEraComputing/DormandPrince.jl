@@ -6,6 +6,7 @@ abstract type AbstractDPSolver{T <: Real, StateType <: AbstractVector, F} end
     INPUT_NOT_CONSISTENT = -1 # use for check failures in the beginning of  core_integrator call
     LARGER_NMAX_NEEDED = -2
     STEP_SIZE_BECOMES_TOO_SMALL = -3
+    STEP_SIZE_BECOMES_NAN = -4
 end
 
 @enum Checks begin

@@ -98,11 +98,10 @@ function dopri5(
 
     ###### Basic Integration Step
     for _ in 1:solver.options.maximum_allowed_steps
-        # if nstep > solver.options.maximum_allowed_steps
-        #     # GOTO 78
-        #     # println(" MORE THAN NMAX = ", solver.options.maximum_allowed_steps, " STEPS ARE NEEDED")
-        #     return h, Report(solver.vars.x, DormandPrince.INPUT_CHECKS_SUCCESSFUL, DormandPrince.LARGER_NMAX_NEEDED , 0, 0, 0, 0)
-        # end
+        if isnan(h)
+            idid = DormandPrince.STEP_SIZE_BECOMES_NAN
+            break
+        end
         
         if (0.10 * abs(h)) <= abs(solver.vars.x)*solver.options.uround 
             # GOTO 77
