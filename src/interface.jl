@@ -12,7 +12,7 @@ function Base.iterate(solver_iter::SolverIterator)
     # integrate to first time
     integrate(solver_iter.solver, first(solver_iter.times))
     # return value and index which is the state
-    return (solver_iter.times[1], solver_iter.solver.y), 2    
+    return (solver_iter.times[1], get_current_state(solver_iter.solver)), 2    
 end
 
 # gets the next (t,y), return index+! which is the updated state
@@ -21,7 +21,7 @@ function Base.iterate(solver_iter::SolverIterator, index::Int)
     # integrate to next time
     integrate(solver_iter.solver, solver_iter.times[index])
     # return time and state
-    return (solver_iter.times[index], solver_iter.solver.y), index+1
+    return (solver_iter.times[index], get_current_state(solver_iter.solver)), index+1
 end
 
 # 3 modes of operation for integrate
@@ -29,6 +29,7 @@ end
 # 2. integrate(solver, times) -> iterator
 # 3. integrate(callback, solver, times) -> vector of states with callback applied
 
+get_current_state(::AbstractDPSolver) = error("not implemented")
 integrate(solver::AbstractDPSolver{T}, times::AbstractVector{T}) where {T <: Real} = SolverIterator(solver, times)
 
 function integrate(callback, solver::AbstractDPSolver{T}, times::AbstractVector{T}; sort_times::Bool = true) where {T <: Real}
@@ -37,7 +38,7 @@ function integrate(callback, solver::AbstractDPSolver{T}, times::AbstractVector{
     result = []
     for time in times
         integrate(solver, time)
-        push!(result, callback(time, solver.y))
+        push!(result, callback(time, get_current_state(solver)))
     end
 
     return result
