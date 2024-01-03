@@ -3,7 +3,7 @@
 #include("checks.jl")
 #include("helpers.jl")
 
-function  DormandPrince.integrate!(
+function  DormandPrince.integrate_core!(
    solver::DP8Solver{T},
    xend::T
 ) where T
@@ -20,6 +20,10 @@ function  DormandPrince.integrate!(
     check_uround(solver.options) || return Report(solver.vars.x, DormandPrince.UNSUPPORTED_UROUND, DormandPrince.INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
     check_beta(solver.options) || return Report(solver.vars.x, DormandPrince.CURIOUS_BETA, DormandPrince.INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
     check_safety_factor(solver.options) || return Report(solver.vars.x, DormandPrince.CURIOUS_SAFETY_FACTOR, DormandPrince.INPUT_NOT_CONSISTENT, 0, 0, 0, 0)
+
+    if solver.vars.x == xend
+        return Report(solver.vars.x, DormandPrince.INPUT_CHECKS_SUCCESSFUL, DormandPrince.COMPUTATION_SUCCESSFUL, 0, 0, 0, 0)
+    end
 
     ###### nstiff -  parameters for stiffness detection
     # nstiff = solver_options.stiffness_test_activation_step
