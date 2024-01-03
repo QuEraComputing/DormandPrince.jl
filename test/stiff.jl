@@ -1,5 +1,5 @@
 using Test
-using DormandPrince: DP5Solver, DP8Solver, integrate
+using DormandPrince
 
 function stiff_fcn(x, y, f) 
     f[1] = y[1]^2 - y[1]^3
@@ -14,6 +14,6 @@ end
             [0.0001]
         )
 
-        integrate(solver, 2/0.0001)
+        integrate!(solver, 2/0.0001)
     end    
 end

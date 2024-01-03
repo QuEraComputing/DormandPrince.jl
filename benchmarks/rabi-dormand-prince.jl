@@ -1,5 +1,5 @@
 using BenchmarkTools
-using DormandPrince:DP5Solver, DP8Solver,  integrate
+using DormandPrince
 
 function fcn(x, y, f)
     g(x) = 2.2*2π*sin(2π*x)
@@ -14,6 +14,6 @@ solver = DP8Solver(
     ComplexF64[1.0, 0.0]
 )
 
-integrate(solver, 2π)
+integrate!(solver, 2π)
 
-@benchmark  integrate(clean_solver, 2π) setup=(clean_solver = DP8Solver(fcn, 0.0, ComplexF64[1.0, 0.0])) samples=10000 evals=5 seconds=500
+@benchmark  integrate!(clean_solver, 2π) setup=(clean_solver = DP8Solver(fcn, 0.0, ComplexF64[1.0, 0.0])) samples=10000 evals=5 seconds=500

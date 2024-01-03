@@ -11,7 +11,12 @@ include("dp5/mod.jl")
 include("dp8/mod.jl")
 
 # export Interface
-export DP5Solver, DP8Solver, integrate
+export AbstractDPSolver, 
+    DP5Solver, 
+    DP8Solver, 
+    integrate!, 
+    SolverIterator,
+    get_current_state
 
 
 end # DormandPrince

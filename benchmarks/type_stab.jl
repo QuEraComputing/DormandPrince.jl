@@ -1,4 +1,4 @@
-using DormandPrince: DP5Solver, DP8Solver, integrate
+using DormandPrince
 using DormandPrince.DP8: dop853, error_estimation
 using JET: @report_opt
 
@@ -21,7 +21,7 @@ h = 1e-6
 # @code_warntype error_estimation(solver, 1e-6)
 # @report_opt error_estimation(solver, 1e-6)
 
-@code_warntype integrate(solver, 2π)
-@report_opt integrate(solver, 2π)
+@code_warntype integrate!(solver, 2π)
+@report_opt integrate!(solver, 2π)
 
 

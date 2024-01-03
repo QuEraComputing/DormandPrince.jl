@@ -1,6 +1,6 @@
 
 struct SolverIterator{T <: Real}
-    solver::AbstractDPSolver
+    solver::AbstractDPSolver{T}
     times::AbstractVector{T}
 end
 
@@ -10,7 +10,7 @@ end
 function Base.iterate(solver_iter::SolverIterator)
     length(solver_iter.times) == 0 && return nothing # empty iterator
     # integrate to first time
-    integrate(solver_iter.solver, first(solver_iter.times))
+    integrate!(solver_iter.solver, first(solver_iter.times))
     # return value and index which is the state
     return (solver_iter.times[1], get_current_state(solver_iter.solver)), 2    
 end
@@ -19,7 +19,7 @@ end
 function Base.iterate(solver_iter::SolverIterator, index::Int) 
     index > length(solver_iter.times) && return nothing # end of iterator
     # integrate to next time
-    integrate(solver_iter.solver, solver_iter.times[index])
+    integrate!(solver_iter.solver, solver_iter.times[index])
     # return time and state
     return (solver_iter.times[index], get_current_state(solver_iter.solver)), index+1
 end
@@ -30,14 +30,13 @@ end
 # 3. integrate(callback, solver, times) -> vector of states with callback applied
 
 get_current_state(::AbstractDPSolver) = error("not implemented")
-integrate(solver::AbstractDPSolver{T}, times::AbstractVector{T}) where {T <: Real} = SolverIterator(solver, times)
-
-function integrate(callback, solver::AbstractDPSolver{T}, times::AbstractVector{T}; sort_times::Bool = true) where {T <: Real}
+integrate!(::AbstractDPSolver{T}, ::T) where T = error("not implemented")
+function integrate!(callback, solver::AbstractDPSolver{T}, times::AbstractVector{T}; sort_times::Bool = true) where {T <: Real}
     times = sort_times ? sort(collect(times)) : times
 
     result = []
     for time in times
-        integrate(solver, time)
+        integrate!(solver, time)
         push!(result, callback(time, get_current_state(solver)))
     end
 

@@ -1,6 +1,6 @@
 using Test
 using LinearAlgebra
-using DormandPrince: DP5Solver, DP8Solver, integrate
+using DormandPrince
 
 function evolution_operator(t::Float64)
     ϕ = 2.2 * sin(π * t)^2
@@ -36,9 +36,9 @@ end
             ComplexF64[1.0, 0.0]
         )
 
-        integrate(solver, 2π)
+        integrate!(solver, 2π)
 
-        @test solver.y ≈ solution(2π)
+        @test get_current_state(solver) ≈ solution(2π)
     end
     
 end
@@ -66,7 +66,7 @@ end
                 ComplexF64[1.0, 0.0]
             )
             
-            iter = integrate(solver, times)
+            iter = SolverIterator(solver, times)
 
             for (t,y) in iter
                 push!(values, copy(y))
@@ -99,7 +99,7 @@ end
                 ComplexF64[1.0, 0.0]
             )
 
-            integrate(solver, times) do t, y
+            integrate!(solver, times) do t, y
                 push!(callback_times, t)
                 push!(values, copy(y))
             end

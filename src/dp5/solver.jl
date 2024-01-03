@@ -3,7 +3,7 @@
 #include("checks.jl")
 #include("helpers.jl")
 
-function  DormandPrince.integrate(
+function  DormandPrince.integrate!(
    solver::DP5Solver{T},
    xend::T
 ) where T
