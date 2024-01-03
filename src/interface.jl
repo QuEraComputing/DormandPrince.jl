@@ -30,13 +30,21 @@ end
 # 3. integrate(callback, solver, times) -> vector of states with callback applied
 
 get_current_state(::AbstractDPSolver) = error("not implemented")
-integrate!(::AbstractDPSolver{T}, ::T) where T = error("not implemented")
+integrate_core!(::AbstractDPSolver{T}, ::T) where T = error("not implemented")
+
+function integrate!(solver::AbstractDPSolver{T}, time::T) where T <: Real
+    report = integrate_core!(solver, time)
+    if report.idid != COMPUTATION_SUCCESSFUL
+        error("integration failed at time $time with report $report")
+    end
+end
 function integrate!(callback, solver::AbstractDPSolver{T}, times::AbstractVector{T}; sort_times::Bool = true) where {T <: Real}
     times = sort_times ? sort(collect(times)) : times
 
     result = []
     for time in times
         integrate!(solver, time)
+
         push!(result, callback(time, get_current_state(solver)))
     end
 
