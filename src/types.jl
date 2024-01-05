@@ -28,7 +28,7 @@ struct Report{T <: Real}
     num_rejected_steps::Int
 end
 
-@kwdef struct Options{T <: Real}
+@option struct Options{T <: Real}
     # originally in work[1] - work[7]
     uround::T = eps(T)
     safety_factor:: T = 0.9
@@ -66,7 +66,7 @@ function Consts(expo1::T, options::Options{T}) where T
 end
 
 
-@kwdef mutable struct Vars{T <: Real}
+@option mutable struct Vars{T <: Real}
     x::T = zero(T)
     xph::T = zero(T)
     h::T = zero(T)

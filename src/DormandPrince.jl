@@ -1,6 +1,7 @@
 module DormandPrince
 
 using Base.Iterators:repeated, Repeated
+using Configurations: @option
 
 # internal imports
 include("types.jl")
