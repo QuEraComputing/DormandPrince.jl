@@ -8,3 +8,4 @@ Configurations = "5218b696-f38b-4ac9-8b61-a12ec717816d"
 
 [compat]
 julia = "1"
+Configurations = "0.17"
