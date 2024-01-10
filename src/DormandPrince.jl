@@ -10,6 +10,7 @@ include("checks.jl")
 include("interface.jl")
 include("dp5/mod.jl")
 include("dp8/mod.jl")
+include("show.jl")
 
 # export Interface
 export AbstractDPSolver, 
