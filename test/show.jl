@@ -58,3 +58,20 @@ end
     show(stdout, MIME"text/plain"(), report)
 
 end
+
+@testset "DPException" begin
+
+    # generate a healthy report but encapsulate it inside a DPException
+
+    solver = DP5Solver(
+        stiff_fcn,
+        0.0,
+        [0.0001]
+    )
+
+    report = DormandPrince.integrate_core!(solver, 2/0.0001)
+
+    dp_exception = DormandPrince.DPException(report)
+
+    showerror(stdout, dp_exception)
+end
