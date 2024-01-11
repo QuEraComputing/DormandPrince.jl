@@ -35,7 +35,7 @@ integrate_core!(::AbstractDPSolver{T}, ::T) where T = error("not implemented")
 function integrate!(solver::AbstractDPSolver{T}, time::T) where T <: Real
     report = integrate_core!(solver, time)
     if report.idid != COMPUTATION_SUCCESSFUL
-        error("integration failed at time $time with report $report")
+        throw(DPException(report))
     end
 end
 function integrate!(callback, solver::AbstractDPSolver{T}, times::AbstractVector{T}; sort_times::Bool = true) where {T <: Real}

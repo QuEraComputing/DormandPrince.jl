@@ -71,7 +71,7 @@ function Base.show(io::IO, ::MIME"text/plain", report::Report)
     printstyled(io, tab(0), "Integration Report", color=:underline)
     println(io, tab(0), "\n")
 
-    print(io, tab(4), "x_final: ")
+    print(io, tab(4), "Stopped at x: ")
     printstyled(io, report.x_final, "\n", color=:blue)
 
     print(io, tab(4), "checks: ")
@@ -96,4 +96,8 @@ function Base.show(io::IO, ::MIME"text/plain", report::Report)
     printstyled(io, report.num_accepted_steps, "\n", color=:green)
     print(io, tab(4), "Rejected Steps: ")
     printstyled(io, report.num_rejected_steps, "\n", color=:red)
+end
+
+function Base.showerror(io::IO, e::DPException)
+    show(io, MIME"text/plain"(), e.report)
 end
