@@ -69,6 +69,13 @@ struct Report{T <: Real}
     num_rejected_steps::Int
 end
 
+
+
+
+struct DPException <: Exception
+    report::Report
+end
+
 """
     struct Options{T <: Real}
 

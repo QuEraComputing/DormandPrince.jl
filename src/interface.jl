@@ -88,7 +88,7 @@ julia> get_current_state(solver)
 function integrate!(solver::AbstractDPSolver{T}, time::T) where T <: Real
     report = integrate_core!(solver, time)
     if report.idid != COMPUTATION_SUCCESSFUL
-        error("integration failed at time $time with report $report")
+        throw(DPException(report))
     end
 end
 
