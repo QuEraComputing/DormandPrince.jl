@@ -108,4 +108,17 @@ end
             @test callback_times == times
         end
     end
+
+    @testset "integrate! exception" begin 
+        solver = DP5Solver(
+            fcn,
+            0.0,
+            ComplexF64[1.0, 0.0]
+            ;
+            maximum_allowed_steps=10
+
+        )
+
+        @test_throws DormandPrince.DPException integrate!(solver, 2π)
+    end
 end

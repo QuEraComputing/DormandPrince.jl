@@ -19,3 +19,7 @@ end
 @testset "Error Paths" begin
     include("errors.jl")
 end
+
+@testset "Pretty Printing" begin
+    include("show.jl")
+end

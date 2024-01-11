@@ -28,6 +28,10 @@ struct Report{T <: Real}
     num_rejected_steps::Int
 end
 
+struct DPException <: Exception
+    report::Report
+end
+
 @option struct Options{T <: Real}
     # originally in work[1] - work[7]
     uround::T = eps(T)
