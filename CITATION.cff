@@ -1,0 +1,28 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: DormandPrince.jl
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Phillip
+    family-names: Weinberg
+    orcid: 'https://orcid.org/0000-0002-0654-9761'
+    affiliation: QuEra Computing Inc.
+    email: pweinberg@quera.com
+  - given-names: John
+    family-names: Long
+    email: jlong@quera.com
+    affiliation: QuEra Computing Inc.
+    orcid: 'https://orcid.org/0009-0005-7557-197X'
+repository-code: 'https://github.com/QuEraComputing/DormandPrince.jl'
+abstract: >-
+  Julia-native implementation of the Dormand-Prince 5th and
+  8th order solvers
+keywords:
+  - julia
+  - ordinary differential equation
+license: Apache-2.0
